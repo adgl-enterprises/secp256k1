@@ -1,10 +1,12 @@
 include_HEADERS += include/secp256k1_scratch.h
 include_HEADERS += include/secp256k1_zkp.h
 noinst_HEADERS += src/modules/zkp_compat.h
+noinst_HEADERS += src/modules/zkp_eckey_impl.h
 noinst_HEADERS += src/modules/zkp_scalar_chacha20.h
 noinst_HEADERS += src/modules/zkp_scratch_impl.h
 noinst_HEADERS += src/modules/zkp_modules_impl.h
 noinst_HEADERS += src/modules/zkp_testutil.h
+noinst_HEADERS += src/modules/zkp/tests_exhaustive_util.h
 
 if ENABLE_MODULE_COMMITMENT
 include src/modules/commitment/Makefile.am.include

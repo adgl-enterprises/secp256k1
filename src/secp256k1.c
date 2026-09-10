@@ -239,6 +239,7 @@ static SECP256K1_INLINE const secp256k1_hash_ctx* secp256k1_get_hash_context(con
 }
 
 #ifdef ENABLE_MODULE_GENERATOR
+#include "../include/secp256k1_scratch.h"
 secp256k1_scratch *
 #else
 static secp256k1_scratch *

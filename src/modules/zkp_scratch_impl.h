@@ -5,6 +5,7 @@
 #ifndef SECP256K1_MODULE_ZKP_SCRATCH_IMPL_H
 #define SECP256K1_MODULE_ZKP_SCRATCH_IMPL_H
 
+#include "../../include/secp256k1_scratch.h"
 #include "../ecmult_impl.h"
 
 size_t secp256k1_scratch_space_max_ecmult_points(const secp256k1_context *ctx, const secp256k1_scratch *scratch) {

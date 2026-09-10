@@ -133,7 +133,7 @@ secp256k1_aggsig_context* secp256k1_aggsig_context_create(const secp256k1_contex
     return aggctx;
 }
 
-int secp256k1_aggsig_generate_nonce_single(const secp256k1_context* ctx, secp256k1_scalar *secnonce, secp256k1_gej* pubnonce, secp256k1_rfc6979_hmac_sha256* rng) {
+static int secp256k1_aggsig_generate_nonce_single(const secp256k1_context* ctx, secp256k1_scalar *secnonce, secp256k1_gej* pubnonce, secp256k1_rfc6979_hmac_sha256* rng) {
     int retry;
     unsigned char data[32];
 

@@ -104,7 +104,7 @@ SECP256K1_API int secp256k1_aggsig_export_secnonce_single(
     const unsigned char* seed
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_WARN_UNUSED_RESULT;
 
-/** Generate a single-signer signature (or partial sig), without a stored context 
+/** Generate a single-signer signature (or partial sig), without a stored context
  *
  *  Returns: 1 on success, 0 on failure
  *  Args:    ctx: an existing context object, initialized for signing (cannot be NULL)
@@ -115,7 +115,7 @@ SECP256K1_API int secp256k1_aggsig_export_secnonce_single(
  *           extra32: if non-NULL, add this key to s
  *           pubnonce_for_e: If this is non-NULL, encode this value in e instead of the derived
  *           pubnonce_total: If non-NULL, allow this signature to be included in combined sig
- *               in all cases by negating secnonce32 if the public nonce total has jacobi symbol 
+ *               in all cases by negating secnonce32 if the public nonce total has jacobi symbol
  *               -1. secnonce32 must also be provided
  *           pubkey_for_e: If this is non-NULL, encode this value in e
  *           seed: a 32-byte seed to use for the nonce-generating RNG (cannot be NULL)
@@ -189,7 +189,7 @@ SECP256K1_API int secp256k1_aggsig_add_signatures_single(
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(5) SECP256K1_WARN_UNUSED_RESULT;
 
 
-/** Verify a single-signer signature, without a stored context 
+/** Verify a single-signer signature, without a stored context
  *
  *  Returns: 1 on success, 0 on failure
  *  Args:    ctx: an existing context object, initialized for signing (cannot be NULL)

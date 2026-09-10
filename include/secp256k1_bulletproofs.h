@@ -56,7 +56,7 @@ SECP256K1_API void secp256k1_bulletproof_generators_destroy(
  *     extra_commit: additonal data committed to by the rangeproof (may be NULL if `extra_commit_len` is 0)
  *     extra_commit_len: length of additional data
  */
-SECP256K1_WARN_UNUSED_RESULT SECP256K1_API int secp256k1_bulletproof_rangeproof_verify(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bulletproof_rangeproof_verify(
     const secp256k1_context* ctx,
     secp256k1_scratch* scratch,
     const secp256k1_bulletproof_generators *gens,
@@ -88,7 +88,7 @@ SECP256K1_WARN_UNUSED_RESULT SECP256K1_API int secp256k1_bulletproof_rangeproof_
  *     extra_commit: additonal data committed to by the rangeproof (may be NULL if `extra_commit_len` is 0)
  *     extra_commit_len: array of lengths of additional data
  */
-SECP256K1_WARN_UNUSED_RESULT SECP256K1_API int secp256k1_bulletproof_rangeproof_verify_multi(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bulletproof_rangeproof_verify_multi(
     const secp256k1_context* ctx,
     secp256k1_scratch* scratch,
     const secp256k1_bulletproof_generators *gens,
@@ -120,7 +120,7 @@ SECP256K1_WARN_UNUSED_RESULT SECP256K1_API int secp256k1_bulletproof_rangeproof_
  * extra_commit_len: length of additional data
  *          message: optional 20 bytes of message to recover
  */
-SECP256K1_WARN_UNUSED_RESULT SECP256K1_API int secp256k1_bulletproof_rangeproof_rewind(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bulletproof_rangeproof_rewind(
     const secp256k1_context* ctx,
     uint64_t* value,
     unsigned char* blind,
@@ -159,14 +159,14 @@ SECP256K1_WARN_UNUSED_RESULT SECP256K1_API int secp256k1_bulletproof_rangeproof_
  * extra_commit_len: length of additional data
  *          message: optional 20 bytes of message that can be recovered by rewinding with the correct nonce
  */
-SECP256K1_WARN_UNUSED_RESULT SECP256K1_API int secp256k1_bulletproof_rangeproof_prove(
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bulletproof_rangeproof_prove(
     const secp256k1_context* ctx,
     secp256k1_scratch* scratch,
     const secp256k1_bulletproof_generators* gens,
     unsigned char* proof,
     size_t* plen,
-    unsigned char* tau_x, 
-    secp256k1_pubkey* t_one, 
+    unsigned char* tau_x,
+    secp256k1_pubkey* t_one,
     secp256k1_pubkey* t_two,
     const uint64_t* value,
     const uint64_t* min_value,

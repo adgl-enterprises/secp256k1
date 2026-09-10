@@ -3,6 +3,7 @@ noinst_HEADERS += src/modules/bulletproofs/inner_product_impl.h
 noinst_HEADERS += src/modules/bulletproofs/rangeproof_impl.h
 noinst_HEADERS += src/modules/bulletproofs/main_impl.h
 noinst_HEADERS += src/modules/bulletproofs/tests_impl.h
+noinst_HEADERS += src/modules/bulletproofs/tests_exhaustive_impl.h
 noinst_HEADERS += src/modules/bulletproofs/util.h
 if USE_BENCHMARK
 noinst_PROGRAMS += bench_bulletproof

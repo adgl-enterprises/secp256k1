@@ -215,12 +215,12 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_pedersen_blind_generato
  *       switch_pubkey: pointer to public key 'j'
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_blind_switch(
-  const secp256k1_context* ctx, 
-  unsigned char* blind_switch, 
-  const unsigned char* blind, 
-  uint64_t value, 
-  const secp256k1_generator* value_gen, 
-  const secp256k1_generator* blind_gen, 
+  const secp256k1_context* ctx,
+  unsigned char* blind_switch,
+  const unsigned char* blind,
+  uint64_t value,
+  const secp256k1_generator* value_gen,
+  const secp256k1_generator* blind_gen,
   const secp256k1_pubkey* switch_pubkey
 );
 
