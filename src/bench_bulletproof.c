@@ -38,8 +38,9 @@ typedef struct {
 
 static void bench_bulletproof_common_setup(bench_bulletproof_t *data) {
     size_t i;
-    const unsigned char nonce[32] = "my kingdom for some randomness!!";
-    const unsigned char genbd[32] = "yet more blinding, for the asset";
+    /* Size 33 so the string literal (32 chars + NUL) is a valid initializer; only 32 bytes are used. */
+    const unsigned char nonce[33] = "my kingdom for some randomness!!";
+    const unsigned char genbd[33] = "yet more blinding, for the asset";
 
     memcpy(data->nonce, nonce, 32);
     data->proof = (unsigned char **)malloc(data->n_proofs * sizeof(*data->proof));
@@ -55,8 +56,7 @@ static void bench_bulletproof_rangeproof_setup(void* arg) {
     bench_bulletproof_rangeproof_t *data = (bench_bulletproof_rangeproof_t*)arg;
     size_t i;
     uint64_t v;
-
-    unsigned char blind[32] = "and my kingdom too for a blinder";
+    unsigned char blind[33] = "and my kingdom too for a blinder";
 
     bench_bulletproof_common_setup (data->common);
 
@@ -105,6 +105,7 @@ static void bench_bulletproof_common_teardown(bench_bulletproof_t *data) {
 static void bench_bulletproof_rangeproof_teardown(void* arg, int iter) {
     bench_bulletproof_rangeproof_t *data = (bench_bulletproof_rangeproof_t*)arg;
     size_t i;
+    (void)iter;
 
     if (data->blind != NULL) {
         for (i = 0; i < data->n_commits; i++) {
@@ -125,14 +126,14 @@ static void bench_bulletproof_rangeproof_teardown(void* arg, int iter) {
 
 static void bench_bulletproof_rangeproof_prove(void* arg, int iter) {
     bench_bulletproof_rangeproof_t *data = (bench_bulletproof_rangeproof_t*)arg;
-    size_t i;
+    int i;
     for (i = 0; i < iter; i++) {
         CHECK(secp256k1_bulletproof_rangeproof_prove(data->common->ctx, data->common->scratch, data->common->generators, data->common->proof[0], &data->common->plen, NULL, NULL, NULL, data->value, NULL, data->blind, NULL, data->n_commits, data->common->value_gen, data->nbits, data->common->nonce, NULL, NULL, 0, NULL) == 1);
     }
 }
 
 static void bench_bulletproof_rangeproof_verify(void* arg, int iter) {
-    size_t i;
+    int i;
     bench_bulletproof_rangeproof_t *data = (bench_bulletproof_rangeproof_t*)arg;
 
     for (i = 0; i < iter; i++) {
@@ -141,7 +142,7 @@ static void bench_bulletproof_rangeproof_verify(void* arg, int iter) {
 }
 
 static void bench_bulletproof_rangeproof_rewind_succeed(void* arg, int iter) {
-    size_t i;
+    int i;
     uint64_t v;
     unsigned char blind[32];
     bench_bulletproof_rangeproof_t *data = (bench_bulletproof_rangeproof_t*)arg;
@@ -152,7 +153,7 @@ static void bench_bulletproof_rangeproof_rewind_succeed(void* arg, int iter) {
 }
 
 static void bench_bulletproof_rangeproof_rewind_fail(void* arg, int iter) {
-    size_t i;
+    int i;
     uint64_t v;
     unsigned char blind[32];
     bench_bulletproof_rangeproof_t *data = (bench_bulletproof_rangeproof_t*)arg;

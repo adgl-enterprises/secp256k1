@@ -7,6 +7,7 @@ noinst_HEADERS += src/modules/bulletproofs/util.h
 if USE_BENCHMARK
 noinst_PROGRAMS += bench_bulletproof
 bench_bulletproof_SOURCES = src/bench_bulletproof.c
+bench_bulletproof_CPPFLAGS = -DSECP256K1_STATIC
 bench_bulletproof_LDADD = libsecp256k1.la $(SECP_LIBS)
 bench_bulletproof_LDFLAGS = -static
 endif

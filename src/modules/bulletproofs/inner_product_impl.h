@@ -773,8 +773,11 @@ static int secp256k1_bulletproof_inner_product_prove_impl(const secp256k1_contex
 
     /* Special-case lengths 0 and 1 whose proofs are just explicit lists of scalars */
     if (n <= IP_AB_SCALARS / 2) {
-        secp256k1_scalar a[IP_AB_SCALARS / 2];
-        secp256k1_scalar b[IP_AB_SCALARS / 2];
+        /* Zero-init: when n==0 the loop below does not write a/b, but
+         * scalar_dot_product only reads the first n entries (none). Init
+         * silences -Wmaybe-uninitialized without changing results. */
+        secp256k1_scalar a[IP_AB_SCALARS / 2] = {0};
+        secp256k1_scalar b[IP_AB_SCALARS / 2] = {0};
 
         for (i = 0; i < n; i++) {
             cb(&a[i], NULL, 2*i, cb_data);
