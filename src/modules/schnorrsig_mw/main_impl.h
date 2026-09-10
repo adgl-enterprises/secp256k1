@@ -234,7 +234,7 @@ int secp256k1_schnorrsig_mw_verify_batch(const secp256k1_context *ctx, secp256k1
     secp256k1_zkp_sha256_finalize(ctx, &sha, ecmult_context.chacha_seed);
     secp256k1_scalar_set_int(&ecmult_context.randomizer_cache[0], 1);
 
-    secp256k1_scalar_clear(&s);
+    secp256k1_scalar_set_int(&s, 0);
     if (!secp256k1_schnorrsig_mw_verify_batch_sum_s(&s, ecmult_context.chacha_seed, sig, n_sigs)) {
         return 0;
     }

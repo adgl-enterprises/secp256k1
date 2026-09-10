@@ -10,8 +10,10 @@
 #   ONLY=docker ./ci/local-smoke.sh
 #
 # Docker jobs need Docker and build ci/linux-debian.Dockerfile once (cached as
-# secp256k1-ci-local). They remount this tree and re-run ./ci/ci.sh, which
-# reconfigures the working copy — expect a dirty tree afterward.
+# secp256k1-ci-local). They remount this tree and re-run ./ci/ci.sh. This script
+# distcleans before each docker preset so HOST/CC changes do not link stale
+# objects from a prior arch. Expect a dirty tree afterward (last docker HOST/CC
+# wins; re-run native configure before local make).
 #
 # Env:
 #   JOBS            parallel make/cmake jobs (default: nproc or 4)
@@ -159,6 +161,13 @@ run_docker_ci() {
     local envfile
     section "docker ci/ci.sh: ${name}"
     ensure_docker_image
+
+    # Wipe in-tree build products before each preset. Sequential docker jobs
+    # share this checkout; without distclean, s390x (etc.) links leftover
+    # objects from the previous HOST/CC and fails with "file in wrong format".
+    if [ -f Makefile ]; then
+        make distclean >/dev/null 2>&1 || true
+    fi
 
     envfile="$(mktemp)"
     ci_base_env >"${envfile}"

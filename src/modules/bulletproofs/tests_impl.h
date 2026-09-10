@@ -482,7 +482,8 @@ void test_bulletproof_rangeproof(size_t nbits, size_t expected_size, const secp2
 
     memcpy(nonce, "my kingdom for some randomness!!", sizeof(nonce));
 
-    if (v >> nbits > 0) {
+    /* Shifting a uint64_t by 64 is undefined; for nbits==64 every value fits. */
+    if (nbits < 64 && (v >> nbits) > 0) {
         v = 0;
     }
 
@@ -552,7 +553,7 @@ void test_bulletproof_rangeproof_aggregate(size_t nbits, size_t n_commits, size_
         secp256k1_gej commitj;
 
         v[i] = 223 * i; /* dice-roll random # */
-        if (v[i] >> nbits > 0) {
+        if (nbits < 64 && (v[i] >> nbits) > 0) {
             v[i] = 0;
         }
         secp256k1_scalar_set_u64(&vs, v[i]);
