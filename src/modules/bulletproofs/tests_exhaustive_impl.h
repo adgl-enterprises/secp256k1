@@ -114,7 +114,7 @@ static void test_exhaustive_bulletproof_inner_product_prove(const secp256k1_cont
         CHECK(secp256k1_bulletproof_inner_product_prove_impl(ctx, scratch, proof, &plen, gens, &one, n, secp256k1_bulletproof_exhaustive_abgh_callback, NULL, commit));
         CHECK(plen == secp256k1_bulletproof_innerproduct_proof_length(n));
 
-        secp256k1_scalar_clear(&expected_dot);
+        secp256k1_scalar_set_int(&expected_dot, 0);
         for (i = 0; i < n; ++i) {
             secp256k1_scalar_set_int(&a[i], (int)(2 * i + 1));
             secp256k1_scalar_set_int(&b[i], (int)(2 * i + 2));

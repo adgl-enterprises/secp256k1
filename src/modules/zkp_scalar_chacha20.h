@@ -85,14 +85,14 @@ static void secp256k1_scalar_chacha20(secp256k1_scalar *r1, secp256k1_scalar *r2
         x14 += 0;
         x15 += (uint32_t)over_count;
 
-        r1->d[3] = ZKP_BE32((uint64_t) x0) << 32 | ZKP_BE32(x1);
-        r1->d[2] = ZKP_BE32((uint64_t) x2) << 32 | ZKP_BE32(x3);
-        r1->d[1] = ZKP_BE32((uint64_t) x4) << 32 | ZKP_BE32(x5);
-        r1->d[0] = ZKP_BE32((uint64_t) x6) << 32 | ZKP_BE32(x7);
-        r2->d[3] = ZKP_BE32((uint64_t) x8) << 32 | ZKP_BE32(x9);
-        r2->d[2] = ZKP_BE32((uint64_t) x10) << 32 | ZKP_BE32(x11);
-        r2->d[1] = ZKP_BE32((uint64_t) x12) << 32 | ZKP_BE32(x13);
-        r2->d[0] = ZKP_BE32((uint64_t) x14) << 32 | ZKP_BE32(x15);
+        r1->d[3] = ((uint64_t)ZKP_BE32(x0) << 32) | (uint64_t)ZKP_BE32(x1);
+        r1->d[2] = ((uint64_t)ZKP_BE32(x2) << 32) | (uint64_t)ZKP_BE32(x3);
+        r1->d[1] = ((uint64_t)ZKP_BE32(x4) << 32) | (uint64_t)ZKP_BE32(x5);
+        r1->d[0] = ((uint64_t)ZKP_BE32(x6) << 32) | (uint64_t)ZKP_BE32(x7);
+        r2->d[3] = ((uint64_t)ZKP_BE32(x8) << 32) | (uint64_t)ZKP_BE32(x9);
+        r2->d[2] = ((uint64_t)ZKP_BE32(x10) << 32) | (uint64_t)ZKP_BE32(x11);
+        r2->d[1] = ((uint64_t)ZKP_BE32(x12) << 32) | (uint64_t)ZKP_BE32(x13);
+        r2->d[0] = ((uint64_t)ZKP_BE32(x14) << 32) | (uint64_t)ZKP_BE32(x15);
 
         over1 = secp256k1_scalar_check_overflow(r1);
         over2 = secp256k1_scalar_check_overflow(r2);

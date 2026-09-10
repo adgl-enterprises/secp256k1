@@ -356,7 +356,7 @@ void test_bulletproof_inner_product(size_t n, const secp256k1_bulletproof_genera
 
     random_group_element_test(&offs_ctx.ext_pt);
     random_scalar_order(&offs_ctx.ext_sc);
-    secp256k1_scalar_clear(&offs_ctx.skew_sc);
+    secp256k1_scalar_set_int(&offs_ctx.skew_sc, 0);
     offs_ctx.n = n;
 
     secp256k1_scalar_set_int(&one, 1);
@@ -384,7 +384,7 @@ void test_bulletproof_inner_product(size_t n, const secp256k1_bulletproof_genera
 
     /* Check proof with no offsets or other baubles */
     offs_ctx.parity = 0;
-    secp256k1_scalar_clear(&innp_ctx.p_offs);
+    secp256k1_scalar_set_int(&innp_ctx.p_offs, 0);
     CHECK(secp256k1_bulletproof_inner_product_verify_impl(CTX, scratch, gens, n, &innp_ctx, 1, plen, 1) == 1);
 
     /* skew P by a random amount and instruct the verifier to offset it */

@@ -62,7 +62,8 @@ SECP256K1_INLINE static size_t secp256k1_ctzl(unsigned long x) {
 }
 
 static void secp256k1_scalar_dot_product(secp256k1_scalar *r, const secp256k1_scalar *a, const secp256k1_scalar *b, size_t n) {
-    secp256k1_scalar_clear(r);
+    /* set_int(0), not clear: clear() marks memory undefined under VERIFY+valgrind/MSan. */
+    secp256k1_scalar_set_int(r, 0);
     while(n--) {
         secp256k1_scalar term;
         secp256k1_scalar_mul(&term, &a[n], &b[n]);

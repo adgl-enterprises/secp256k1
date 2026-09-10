@@ -200,13 +200,13 @@ int secp256k1_bulletproof_rangeproof_rewind(const secp256k1_context* ctx, uint64
 }
 
 int secp256k1_bulletproof_rangeproof_prove(
-    const secp256k1_context* ctx, secp256k1_scratch* scratch, const secp256k1_bulletproof_generators* gens, 
-    unsigned char* proof, size_t* plen, 
-    unsigned char* tau_x, secp256k1_pubkey* t_one, secp256k1_pubkey* t_two, 
-    const uint64_t* value, const uint64_t* min_value, 
-    const unsigned char* const* blind, const secp256k1_pedersen_commitment* const* commits, size_t n_commits, 
-    const secp256k1_generator* value_gen, size_t nbits, 
-    const unsigned char* nonce, const unsigned char* private_nonce, 
+    const secp256k1_context* ctx, secp256k1_scratch* scratch, const secp256k1_bulletproof_generators* gens,
+    unsigned char* proof, size_t* plen,
+    unsigned char* tau_x, secp256k1_pubkey* t_one, secp256k1_pubkey* t_two,
+    const uint64_t* value, const uint64_t* min_value,
+    const unsigned char* const* blind, const secp256k1_pedersen_commitment* const* commits, size_t n_commits,
+    const secp256k1_generator* value_gen, size_t nbits,
+    const unsigned char* nonce, const unsigned char* private_nonce,
     const unsigned char* extra_commit, size_t extra_commit_len, const unsigned char* message
 ) {
     int ret;
@@ -269,7 +269,7 @@ int secp256k1_bulletproof_rangeproof_prove(
             secp256k1_zkp_scratch_frame_end(ctx, scratch, _zkp_scratch_cp);
             return 0;
         }
-        
+
         if (commits == NULL) {
             /* Calculate commitment from blinding factor */
             secp256k1_gej commitj;

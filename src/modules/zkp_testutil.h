@@ -23,7 +23,8 @@ static int64_t secp256k1_rands64(int64_t min, int64_t max) {
     if (max <= min) {
         return min;
     }
-    return min + (int64_t)(testrand64() % (uint64_t)(max - min + 1));
+    /* Cast before +1 so max==INT64_MAX does not overflow signed arithmetic. */
+    return min + (int64_t)(testrand64() % ((uint64_t)(max - min) + 1));
 }
 
 static void counting_illegal_callback_fn(const char* str, void* data) {

@@ -240,24 +240,27 @@ static SECP256K1_INLINE const secp256k1_hash_ctx* secp256k1_get_hash_context(con
 
 #ifdef ENABLE_MODULE_GENERATOR
 #include "../include/secp256k1_scratch.h"
-secp256k1_scratch *
-#else
-static secp256k1_scratch *
-#endif
-secp256k1_scratch_space_create(const secp256k1_context* ctx, size_t max_size) {
+
+SECP256K1_API secp256k1_scratch *secp256k1_scratch_space_create(const secp256k1_context* ctx, size_t max_size) {
     VERIFY_CHECK(ctx != NULL);
     return secp256k1_scratch_create(&ctx->error_callback, max_size);
 }
 
-#ifdef ENABLE_MODULE_GENERATOR
-void
-#else
-static void
-#endif
-secp256k1_scratch_space_destroy(const secp256k1_context *ctx, secp256k1_scratch* scratch) {
+SECP256K1_API void secp256k1_scratch_space_destroy(const secp256k1_context *ctx, secp256k1_scratch* scratch) {
     VERIFY_CHECK(ctx != NULL);
     secp256k1_scratch_destroy(&ctx->error_callback, scratch);
 }
+#else
+static secp256k1_scratch *secp256k1_scratch_space_create(const secp256k1_context* ctx, size_t max_size) {
+    VERIFY_CHECK(ctx != NULL);
+    return secp256k1_scratch_create(&ctx->error_callback, max_size);
+}
+
+static void secp256k1_scratch_space_destroy(const secp256k1_context *ctx, secp256k1_scratch* scratch) {
+    VERIFY_CHECK(ctx != NULL);
+    secp256k1_scratch_destroy(&ctx->error_callback, scratch);
+}
+#endif
 
 /* Mark memory as no-longer-secret for the purpose of analysing constant-time behaviour
  *  of the software.

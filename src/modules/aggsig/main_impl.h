@@ -575,7 +575,7 @@ int secp256k1_aggsig_verify_single(
     if (scratch == NULL){
         return 0;
     }
-    
+
     /* Compute sG - eP, which should be R */
     if (!secp256k1_ecmult_multi_var(&ctx->error_callback, scratch, &pk_sum, &g_sc, secp256k1_aggsig_verify_callback_single, &cbdata, 1)) {
         secp256k1_scratch_destroy(&ctx->error_callback, scratch);

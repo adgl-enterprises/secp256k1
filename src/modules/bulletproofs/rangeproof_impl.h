@@ -87,8 +87,8 @@ static int secp256k1_bulletproof_rangeproof_vfy_callback(secp256k1_scalar *sc, s
             secp256k1_scalar twosum;
             secp256k1_scalar tmp;
 
-            secp256k1_scalar_clear(&twosum);
-            secp256k1_scalar_clear(&yn);
+            secp256k1_scalar_set_int(&twosum, 0);
+            secp256k1_scalar_set_int(&yn, 0);
             secp256k1_scalar_set_int(&tmp, 1);
 
             secp256k1_scalar_sqr(&ctx->zsq, &ctx->z);  /* need to re-set this */
@@ -101,7 +101,7 @@ static int secp256k1_bulletproof_rangeproof_vfy_callback(secp256k1_scalar *sc, s
                 secp256k1_scalar twon;
                 size_t j;
 
-                secp256k1_scalar_clear(&twon);
+                secp256k1_scalar_set_int(&twon, 0);
                 for (j = 0; j < nbits; j++) {
                     secp256k1_scalar_mul(&yn, &yn, &ctx->y);
                     secp256k1_scalar_add(&twon, &twon, &twon);
@@ -435,12 +435,12 @@ static int secp256k1_bulletproof_abgh_callback(secp256k1_scalar *sc, secp256k1_g
  * while the non-bold `g` corresponds to the asset type `value_gen`.
  */
 static int secp256k1_bulletproof_rangeproof_prove_impl(
-    const secp256k1_context *ctx, secp256k1_scratch *scratch, 
-    unsigned char *proof, size_t *plen, 
+    const secp256k1_context *ctx, secp256k1_scratch *scratch,
+    unsigned char *proof, size_t *plen,
     unsigned char *tauxc, secp256k1_ge *tge,
     const size_t nbits, const uint64_t *value, const uint64_t *min_value,
-    const secp256k1_scalar *blind, const secp256k1_ge *commitp, size_t n_commits, 
-    const secp256k1_ge *value_gen, const secp256k1_bulletproof_generators *gens, 
+    const secp256k1_scalar *blind, const secp256k1_ge *commitp, size_t n_commits,
+    const secp256k1_ge *value_gen, const secp256k1_bulletproof_generators *gens,
     const unsigned char *nonce, const unsigned char *private_nonce,
     const unsigned char *extra_commit, size_t extra_commit_len, const unsigned char *message) {
     secp256k1_bulletproof_lr_generator lr_gen;
@@ -479,7 +479,7 @@ static int secp256k1_bulletproof_rangeproof_prove_impl(
         return 0;
     }
 
-    secp256k1_scalar_clear(&zero);
+    secp256k1_scalar_set_int(&zero, 0);
 
     /* Commit to all input data: min value, pedersen commit, asset generator, extra_commit */
     if (min_value != NULL) {
@@ -593,7 +593,7 @@ static int secp256k1_bulletproof_rangeproof_prove_impl(
     /* Compute coefficients t0, t1, t2 of the <l, r> polynomial */
     /* t0 = l(0) dot r(0) */
     secp256k1_lr_generator_init(&lr_gen, nonce, &y, &z, nbits, value, min_value, n_commits);
-    secp256k1_scalar_clear(&t0);
+    secp256k1_scalar_set_int(&t0, 0);
     for (i = 0; i < nbits * n_commits; i++) {
         secp256k1_scalar l, r;
         secp256k1_lr_generate(&lr_gen, &l, &r, &zero);
@@ -603,7 +603,7 @@ static int secp256k1_bulletproof_rangeproof_prove_impl(
 
     /* A = t0 + t1 + t2 = l(1) dot r(1) */
     secp256k1_lr_generator_init(&lr_gen, nonce, &y, &z, nbits, value, min_value, n_commits);
-    secp256k1_scalar_clear(&t1);
+    secp256k1_scalar_set_int(&t1, 0);
     for (i = 0; i < nbits * n_commits; i++) {
         secp256k1_scalar one;
         secp256k1_scalar l, r;
@@ -615,7 +615,7 @@ static int secp256k1_bulletproof_rangeproof_prove_impl(
 
     /* B = t0 - t1 + t2 = l(-1) dot r(-1) */
     secp256k1_lr_generator_init(&lr_gen, nonce, &y, &z, nbits, value, min_value, n_commits);
-    secp256k1_scalar_clear(&t2);
+    secp256k1_scalar_set_int(&t2, 0);
     for (i = 0; i < nbits * n_commits; i++) {
         secp256k1_scalar negone;
         secp256k1_scalar l, r;

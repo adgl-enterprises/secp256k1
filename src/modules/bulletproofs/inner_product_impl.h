@@ -155,7 +155,7 @@ static int secp256k1_bulletproof_innerproduct_vfy_ecmult_callback(secp256k1_scal
             *pt = ctx->genh[idx - ctx->vec_len];
         }
 
-        secp256k1_scalar_clear(sc);
+        secp256k1_scalar_set_int(sc, 0);
         /* Loop over all the different inner product proofs we might be doing at once. Since they
          * share generators `G_i` and `H_i`, we compute all of their scalars at once and add them.
          * For each proof we start with the "seed value" `ctx->proof[i].xcache[0]` (see next comment
@@ -287,7 +287,7 @@ static int secp256k1_bulletproof_innerproduct_vfy_ecmult_callback(secp256k1_scal
     } else if (ctx->shared_g && idx == 2 * (ctx->vec_len + ctx->lg_vec_len * ctx->n_proofs) + 1) {
         /* Special case: the first extra point is independent of the proof, for both rangeproof and circuit */
         size_t i;
-        secp256k1_scalar_clear(sc);
+        secp256k1_scalar_set_int(sc, 0);
         for (i = 0; i < ctx->n_proofs; i++) {
             secp256k1_scalar term;
             if ((ctx->proof[i].proof->rangeproof_cb)(&term, pt, &ctx->randomizer[i], 2 * (ctx->vec_len + ctx->lg_vec_len), ctx->proof[i].proof->rangeproof_cb_data) != 1) {
@@ -337,7 +337,7 @@ static int secp256k1_bulletproof_inner_product_verify_impl(const secp256k1_conte
         return 0;
     }
 
-    secp256k1_scalar_clear(&zero);
+    secp256k1_scalar_set_int(&zero, 0);
     ecmult_data.n_proofs = n_proofs;
     ecmult_data.g = gens->blinding_gen;
     ecmult_data.geng = gens->gens;
@@ -361,7 +361,7 @@ static int secp256k1_bulletproof_inner_product_verify_impl(const secp256k1_conte
     }
     secp256k1_zkp_sha256_finalize(ctx, &sha256, commit);
 
-    secp256k1_scalar_clear(&ecmult_data.p_offs);
+    secp256k1_scalar_set_int(&ecmult_data.p_offs, 0);
     for (i = 0; i < n_proofs; i++) {
         const unsigned char *serproof = proof[i].proof;
         unsigned char proof_commit[32];
@@ -676,7 +676,7 @@ static int secp256k1_bulletproof_inner_product_real_prove_impl(const secp256k1_c
         pfdata.grouping = (size_t)1 << i;
 
         /* L */
-        secp256k1_scalar_clear(&pfdata.g_sc);
+        secp256k1_scalar_set_int(&pfdata.g_sc, 0);
         for (j = 0; j < halfwidth; j++) {
             secp256k1_scalar prod;
             secp256k1_scalar_mul(&prod, &a_arr[2*j], &b_arr[2*j + 1]);
@@ -689,7 +689,7 @@ static int secp256k1_bulletproof_inner_product_real_prove_impl(const secp256k1_c
         secp256k1_ge_set_gej(&out_pt[(*pt_idx)++], &tmplj);
 
         /* R */
-        secp256k1_scalar_clear(&pfdata.g_sc);
+        secp256k1_scalar_set_int(&pfdata.g_sc, 0);
         for (j = 0; j < halfwidth; j++) {
             secp256k1_scalar prod;
             secp256k1_scalar_mul(&prod, &a_arr[2*j + 1], &b_arr[2*j]);
