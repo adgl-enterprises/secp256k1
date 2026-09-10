@@ -54,6 +54,14 @@ option(SECP256K1_ENABLE_MODULE_MUSIG "Enable musig module." ON)
 option(SECP256K1_ENABLE_MODULE_ELLSWIFT "Enable ElligatorSwift module." ON)
 option(SECP256K1_ENABLE_MODULE_SILENTPAYMENTS "Enable Silent Payments module." ON)
 
+# BEGIN ZKP
+option(SECP256K1_ENABLE_MODULE_GENERATOR "Enable NUMS generator module." ON)
+option(SECP256K1_ENABLE_MODULE_COMMITMENT "Enable Pedersen commitments module." ON)
+option(SECP256K1_ENABLE_MODULE_BULLETPROOF "Enable bulletproofs module." ON)
+option(SECP256K1_ENABLE_MODULE_AGGSIG "Enable aggsig module." ON)
+option(SECP256K1_ENABLE_MODULE_SCHNORRSIG_MW "Enable Mimblewimble Schnorr module." ON)
+# END ZKP
+
 option(SECP256K1_USE_EXTERNAL_DEFAULT_CALLBACKS "Enable external default callback functions." OFF)
 if(SECP256K1_USE_EXTERNAL_DEFAULT_CALLBACKS)
   add_compile_definitions(USE_EXTERNAL_DEFAULT_CALLBACKS=1)
@@ -291,6 +299,11 @@ message("  schnorrsig .......................... ${SECP256K1_ENABLE_MODULE_SCHNO
 message("  musig ............................... ${SECP256K1_ENABLE_MODULE_MUSIG}")
 message("  ElligatorSwift ...................... ${SECP256K1_ENABLE_MODULE_ELLSWIFT}")
 message("  Silent Payments ..................... ${SECP256K1_ENABLE_MODULE_SILENTPAYMENTS}")
+message("  generator ........................... ${SECP256K1_ENABLE_MODULE_GENERATOR}")
+message("  commitment .......................... ${SECP256K1_ENABLE_MODULE_COMMITMENT}")
+message("  bulletproof ......................... ${SECP256K1_ENABLE_MODULE_BULLETPROOF}")
+message("  aggsig .............................. ${SECP256K1_ENABLE_MODULE_AGGSIG}")
+message("  schnorrsig-mw ....................... ${SECP256K1_ENABLE_MODULE_SCHNORRSIG_MW}")
 message("Parameters:")
 message("  ecmult window size .................. ${SECP256K1_ECMULT_WINDOW_SIZE}")
 message("  ecmult gen table size ............... ${SECP256K1_ECMULT_GEN_KB} KiB")

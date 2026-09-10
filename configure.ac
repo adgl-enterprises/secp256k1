@@ -197,6 +197,26 @@ AC_ARG_ENABLE(module_silentpayments,
     AS_HELP_STRING([--enable-module-silentpayments],[enable Silent Payments module [default=yes]]), [],
     [SECP_SET_DEFAULT([enable_module_silentpayments], [yes], [yes])])
 
+AC_ARG_ENABLE(module_generator,
+    AS_HELP_STRING([--enable-module-generator],[enable NUMS generator module [default=yes]]), [],
+    [SECP_SET_DEFAULT([enable_module_generator], [yes], [yes])])
+
+AC_ARG_ENABLE(module_commitment,
+    AS_HELP_STRING([--enable-module-commitment],[enable Pedersen commitments module [default=yes]]), [],
+    [SECP_SET_DEFAULT([enable_module_commitment], [yes], [yes])])
+
+AC_ARG_ENABLE(module_bulletproof,
+    AS_HELP_STRING([--enable-module-bulletproof],[enable bulletproofs module [default=yes]]), [],
+    [SECP_SET_DEFAULT([enable_module_bulletproof], [yes], [yes])])
+
+AC_ARG_ENABLE(module_aggsig,
+    AS_HELP_STRING([--enable-module-aggsig],[enable aggsig module [default=yes]]), [],
+    [SECP_SET_DEFAULT([enable_module_aggsig], [yes], [yes])])
+
+AC_ARG_ENABLE(module_schnorrsig_mw,
+    AS_HELP_STRING([--enable-module-schnorrsig-mw],[enable Mimblewimble Schnorr module [default=yes]]), [],
+    [SECP_SET_DEFAULT([enable_module_schnorrsig_mw], [yes], [yes])])
+
 AC_ARG_ENABLE(external_default_callbacks,
     AS_HELP_STRING([--enable-external-default-callbacks],[enable external default callback functions [default=no]]), [],
     [SECP_SET_DEFAULT([enable_external_default_callbacks], [no], [no])])
@@ -443,6 +463,43 @@ if test x"$enable_module_ecdh" = x"yes"; then
   SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_ECDH=1"
 fi
 
+# BEGIN ZKP
+if test x"$enable_module_schnorrsig_mw" = x"yes"; then
+  if test x"$enable_module_generator" = x"no"; then
+    AC_MSG_ERROR([Module dependency error: schnorrsig-mw requires generator. Enable --enable-module-generator.])
+  fi
+  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_SCHNORRSIG_MW=1"
+fi
+
+if test x"$enable_module_aggsig" = x"yes"; then
+  if test x"$enable_module_generator" = x"no"; then
+    AC_MSG_ERROR([Module dependency error: aggsig requires generator. Enable --enable-module-generator.])
+  fi
+  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_AGGSIG=1"
+fi
+
+if test x"$enable_module_bulletproof" = x"yes"; then
+  if test x"$enable_module_commitment" = x"no"; then
+    AC_MSG_ERROR([Module dependency error: bulletproof requires commitment. Enable --enable-module-commitment.])
+  fi
+  if test x"$enable_module_generator" = x"no"; then
+    AC_MSG_ERROR([Module dependency error: bulletproof requires generator. Enable --enable-module-generator.])
+  fi
+  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_BULLETPROOF=1"
+fi
+
+if test x"$enable_module_commitment" = x"yes"; then
+  if test x"$enable_module_generator" = x"no"; then
+    AC_MSG_ERROR([Module dependency error: commitment requires generator. Enable --enable-module-generator.])
+  fi
+  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_COMMITMENT=1"
+fi
+
+if test x"$enable_module_generator" = x"yes"; then
+  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_GENERATOR=1"
+fi
+# END ZKP
+
 if test x"$enable_external_default_callbacks" = x"yes"; then
   SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DUSE_EXTERNAL_DEFAULT_CALLBACKS=1"
 fi
@@ -485,6 +542,11 @@ AM_CONDITIONAL([ENABLE_MODULE_SCHNORRSIG], [test x"$enable_module_schnorrsig" = 
 AM_CONDITIONAL([ENABLE_MODULE_MUSIG], [test x"$enable_module_musig" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_ELLSWIFT], [test x"$enable_module_ellswift" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_SILENTPAYMENTS], [test x"$enable_module_silentpayments" = x"yes"])
+AM_CONDITIONAL([ENABLE_MODULE_GENERATOR], [test x"$enable_module_generator" = x"yes"])
+AM_CONDITIONAL([ENABLE_MODULE_COMMITMENT], [test x"$enable_module_commitment" = x"yes"])
+AM_CONDITIONAL([ENABLE_MODULE_BULLETPROOF], [test x"$enable_module_bulletproof" = x"yes"])
+AM_CONDITIONAL([ENABLE_MODULE_AGGSIG], [test x"$enable_module_aggsig" = x"yes"])
+AM_CONDITIONAL([ENABLE_MODULE_SCHNORRSIG_MW], [test x"$enable_module_schnorrsig_mw" = x"yes"])
 AM_CONDITIONAL([USE_EXTERNAL_ASM], [test x"$enable_external_asm" = x"yes"])
 AM_CONDITIONAL([USE_ASM_ARM], [test x"$set_asm" = x"arm32"])
 AM_CONDITIONAL([BUILD_WINDOWS], [test "$build_windows" = "yes"])
@@ -510,6 +572,11 @@ echo "  module schnorrsig       = $enable_module_schnorrsig"
 echo "  module musig            = $enable_module_musig"
 echo "  module ellswift         = $enable_module_ellswift"
 echo "  module silentpayments   = $enable_module_silentpayments"
+echo "  module generator        = $enable_module_generator"
+echo "  module commitment       = $enable_module_commitment"
+echo "  module bulletproof      = $enable_module_bulletproof"
+echo "  module aggsig           = $enable_module_aggsig"
+echo "  module schnorrsig-mw    = $enable_module_schnorrsig_mw"
 echo
 echo "  asm                     = $set_asm"
 echo "  ecmult window size      = $set_ecmult_window"
