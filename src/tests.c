@@ -7802,6 +7802,28 @@ static void run_ecdsa_wycheproof(void) {
 # include "modules/silentpayments/tests_impl.h"
 #endif
 
+/* BEGIN ZKP */
+#ifdef ENABLE_MODULE_GENERATOR
+# include "modules/generator/tests_impl.h"
+#endif
+
+#ifdef ENABLE_MODULE_COMMITMENT
+# include "modules/commitment/tests_impl.h"
+#endif
+
+#ifdef ENABLE_MODULE_BULLETPROOF
+# include "modules/bulletproofs/tests_impl.h"
+#endif
+
+#ifdef ENABLE_MODULE_AGGSIG
+# include "modules/aggsig/tests_impl.h"
+#endif
+
+#ifdef ENABLE_MODULE_SCHNORRSIG_MW
+# include "modules/schnorrsig_mw/tests_impl.h"
+#endif
+/* END ZKP */
+
 static void run_secp256k1_memczero_test(void) {
     unsigned char buf1[6] = {1, 2, 3, 4, 5, 6};
     unsigned char buf2[sizeof(buf1)];
@@ -8147,6 +8169,23 @@ static const struct tf_test_module registry_modules[] = {
 #ifdef ENABLE_MODULE_SILENTPAYMENTS
     MAKE_TEST_MODULE(silentpayments),
 #endif
+/* BEGIN ZKP */
+#ifdef ENABLE_MODULE_GENERATOR
+    MAKE_TEST_MODULE(generator),
+#endif
+#ifdef ENABLE_MODULE_COMMITMENT
+    MAKE_TEST_MODULE(commitment),
+#endif
+#ifdef ENABLE_MODULE_BULLETPROOF
+    MAKE_TEST_MODULE(bulletproof),
+#endif
+#ifdef ENABLE_MODULE_AGGSIG
+    MAKE_TEST_MODULE(aggsig),
+#endif
+#ifdef ENABLE_MODULE_SCHNORRSIG_MW
+    MAKE_TEST_MODULE(schnorrsig_mw),
+#endif
+/* END ZKP */
     MAKE_TEST_MODULE(utils),
 };
 
