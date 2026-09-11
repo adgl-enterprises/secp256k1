@@ -44,6 +44,7 @@
 #include "../include/secp256k1_silentpayments.h"
 #endif
 
+/* BEGIN ZKP */
 /* ZKP module ctime coverage is intentionally disabled for CI.
  * Valgrind currently reports secret-dependent branches in pedersen_commit,
  * schnorrsig_mw_sign, aggsig_sign_single, and bulletproof prove (missing
@@ -77,6 +78,7 @@
 #include "../include/secp256k1_scratch.h"
 #endif
 #endif /* SECP256K1_ENABLE_ZKP_CTIME_TESTS */
+/* END ZKP */
 
 #if defined(__GNUC__)
 # pragma GCC diagnostic push
@@ -382,6 +384,7 @@ static void run_tests(secp256k1_context *ctx, unsigned char *key) {
 
 #endif
 
+/* BEGIN ZKP */
 #if SECP256K1_ENABLE_ZKP_CTIME_TESTS
 #ifdef ENABLE_MODULE_COMMITMENT
     {
@@ -473,6 +476,7 @@ static void run_tests(secp256k1_context *ctx, unsigned char *key) {
     }
 #endif
 #endif /* SECP256K1_ENABLE_ZKP_CTIME_TESTS */
+/* END ZKP */
 }
 
 #if defined(__GNUC__)

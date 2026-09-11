@@ -362,6 +362,7 @@ static void test_exhaustive_sign(const secp256k1_context *ctx, const secp256k1_g
 #include "modules/ellswift/tests_exhaustive_impl.h"
 #endif
 
+/* BEGIN ZKP */
 #ifdef ENABLE_MODULE_GENERATOR
 #include "modules/generator/tests_exhaustive_impl.h"
 #endif
@@ -381,6 +382,7 @@ static void test_exhaustive_sign(const secp256k1_context *ctx, const secp256k1_g
 #ifdef ENABLE_MODULE_SCHNORRSIG_MW
 #include "modules/schnorrsig_mw/tests_exhaustive_impl.h"
 #endif
+/* END ZKP */
 
 int main(int argc, char** argv) {
     int i;
@@ -486,6 +488,7 @@ int main(int argc, char** argv) {
     #endif
 #endif
 
+/* BEGIN ZKP */
 #ifdef ENABLE_MODULE_GENERATOR
         test_exhaustive_generator(ctx);
 #endif
@@ -501,6 +504,7 @@ int main(int argc, char** argv) {
 #ifdef ENABLE_MODULE_SCHNORRSIG_MW
         test_exhaustive_schnorrsig_mw(ctx);
 #endif
+/* END ZKP */
 
         secp256k1_context_destroy(ctx);
     }

@@ -163,6 +163,7 @@ if(SECP256K1_BUILD_BENCHMARK)
   target_link_libraries(bench_internal secp256k1_precomputed secp256k1_asm)
   add_executable(bench_ecmult bench_ecmult.c)
   target_link_libraries(bench_ecmult secp256k1_precomputed secp256k1_asm)
+  # BEGIN ZKP
   if(SECP256K1_ENABLE_MODULE_GENERATOR)
     add_executable(bench_generator bench_generator.c)
     target_link_libraries(bench_generator secp256k1)
@@ -171,6 +172,7 @@ if(SECP256K1_BUILD_BENCHMARK)
     add_executable(bench_bulletproof bench_bulletproof.c)
     target_link_libraries(bench_bulletproof secp256k1)
   endif()
+  # END ZKP
 endif()
 
 if(SECP256K1_BUILD_TESTS)

@@ -197,6 +197,7 @@ AC_ARG_ENABLE(module_silentpayments,
     AS_HELP_STRING([--enable-module-silentpayments],[enable Silent Payments module [default=yes]]), [],
     [SECP_SET_DEFAULT([enable_module_silentpayments], [yes], [yes])])
 
+# BEGIN ZKP
 AC_ARG_ENABLE(module_generator,
     AS_HELP_STRING([--enable-module-generator],[enable NUMS generator module [default=yes]]), [],
     [SECP_SET_DEFAULT([enable_module_generator], [yes], [yes])])
@@ -216,6 +217,7 @@ AC_ARG_ENABLE(module_aggsig,
 AC_ARG_ENABLE(module_schnorrsig_mw,
     AS_HELP_STRING([--enable-module-schnorrsig-mw],[enable Mimblewimble Schnorr module [default=yes]]), [],
     [SECP_SET_DEFAULT([enable_module_schnorrsig_mw], [yes], [yes])])
+# END ZKP
 
 AC_ARG_ENABLE(external_default_callbacks,
     AS_HELP_STRING([--enable-external-default-callbacks],[enable external default callback functions [default=no]]), [],
@@ -542,11 +544,13 @@ AM_CONDITIONAL([ENABLE_MODULE_SCHNORRSIG], [test x"$enable_module_schnorrsig" = 
 AM_CONDITIONAL([ENABLE_MODULE_MUSIG], [test x"$enable_module_musig" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_ELLSWIFT], [test x"$enable_module_ellswift" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_SILENTPAYMENTS], [test x"$enable_module_silentpayments" = x"yes"])
+# BEGIN ZKP
 AM_CONDITIONAL([ENABLE_MODULE_GENERATOR], [test x"$enable_module_generator" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_COMMITMENT], [test x"$enable_module_commitment" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_BULLETPROOF], [test x"$enable_module_bulletproof" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_AGGSIG], [test x"$enable_module_aggsig" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_SCHNORRSIG_MW], [test x"$enable_module_schnorrsig_mw" = x"yes"])
+# END ZKP
 AM_CONDITIONAL([USE_EXTERNAL_ASM], [test x"$enable_external_asm" = x"yes"])
 AM_CONDITIONAL([USE_ASM_ARM], [test x"$set_asm" = x"arm32"])
 AM_CONDITIONAL([BUILD_WINDOWS], [test "$build_windows" = "yes"])
@@ -572,11 +576,13 @@ echo "  module schnorrsig       = $enable_module_schnorrsig"
 echo "  module musig            = $enable_module_musig"
 echo "  module ellswift         = $enable_module_ellswift"
 echo "  module silentpayments   = $enable_module_silentpayments"
+# BEGIN ZKP
 echo "  module generator        = $enable_module_generator"
 echo "  module commitment       = $enable_module_commitment"
 echo "  module bulletproof      = $enable_module_bulletproof"
 echo "  module aggsig           = $enable_module_aggsig"
 echo "  module schnorrsig-mw    = $enable_module_schnorrsig_mw"
+# END ZKP
 echo
 echo "  asm                     = $set_asm"
 echo "  ecmult window size      = $set_ecmult_window"

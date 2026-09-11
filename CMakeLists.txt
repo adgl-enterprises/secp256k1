@@ -299,11 +299,13 @@ message("  schnorrsig .......................... ${SECP256K1_ENABLE_MODULE_SCHNO
 message("  musig ............................... ${SECP256K1_ENABLE_MODULE_MUSIG}")
 message("  ElligatorSwift ...................... ${SECP256K1_ENABLE_MODULE_ELLSWIFT}")
 message("  Silent Payments ..................... ${SECP256K1_ENABLE_MODULE_SILENTPAYMENTS}")
+# BEGIN ZKP
 message("  generator ........................... ${SECP256K1_ENABLE_MODULE_GENERATOR}")
 message("  commitment .......................... ${SECP256K1_ENABLE_MODULE_COMMITMENT}")
 message("  bulletproof ......................... ${SECP256K1_ENABLE_MODULE_BULLETPROOF}")
 message("  aggsig .............................. ${SECP256K1_ENABLE_MODULE_AGGSIG}")
 message("  schnorrsig-mw ....................... ${SECP256K1_ENABLE_MODULE_SCHNORRSIG_MW}")
+# END ZKP
 message("Parameters:")
 message("  ecmult window size .................. ${SECP256K1_ECMULT_WINDOW_SIZE}")
 message("  ecmult gen table size ............... ${SECP256K1_ECMULT_GEN_KB} KiB")

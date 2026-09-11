@@ -238,38 +238,30 @@ static SECP256K1_INLINE const secp256k1_hash_ctx* secp256k1_get_hash_context(con
     return &ctx->hash_ctx;
 }
 
+/* BEGIN ZKP */
 #ifdef ENABLE_MODULE_GENERATOR
 #include "../include/secp256k1_scratch.h"
 
-/* SECP256K1_API on the definition is required for Windows DLL export
- * (__declspec(dllexport)). The extern "C" wrap is required so g++ does not
- * mangle the names (header prototypes alone are not enough here). */
 #ifdef __cplusplus
-extern "C" {
-#endif
-SECP256K1_API secp256k1_scratch *secp256k1_scratch_space_create(const secp256k1_context* ctx, size_t max_size) {
-    VERIFY_CHECK(ctx != NULL);
-    return secp256k1_scratch_create(&ctx->error_callback, max_size);
-}
-
-SECP256K1_API void secp256k1_scratch_space_destroy(const secp256k1_context *ctx, secp256k1_scratch* scratch) {
-    VERIFY_CHECK(ctx != NULL);
-    secp256k1_scratch_destroy(&ctx->error_callback, scratch);
-}
-#ifdef __cplusplus
-}
-#endif
+#define SECP256K1_SCRATCH_API extern "C" SECP256K1_API
 #else
-static secp256k1_scratch *secp256k1_scratch_space_create(const secp256k1_context* ctx, size_t max_size) {
+#define SECP256K1_SCRATCH_API SECP256K1_API
+#endif
+
+#else
+#define SECP256K1_SCRATCH_API static
+#endif
+/* END ZKP */
+
+SECP256K1_SCRATCH_API secp256k1_scratch *secp256k1_scratch_space_create(const secp256k1_context* ctx, size_t max_size) {
     VERIFY_CHECK(ctx != NULL);
     return secp256k1_scratch_create(&ctx->error_callback, max_size);
 }
 
-static void secp256k1_scratch_space_destroy(const secp256k1_context *ctx, secp256k1_scratch* scratch) {
+SECP256K1_SCRATCH_API void secp256k1_scratch_space_destroy(const secp256k1_context *ctx, secp256k1_scratch* scratch) {
     VERIFY_CHECK(ctx != NULL);
     secp256k1_scratch_destroy(&ctx->error_callback, scratch);
 }
-#endif
 
 /* Mark memory as no-longer-secret for the purpose of analysing constant-time behaviour
  *  of the software.
