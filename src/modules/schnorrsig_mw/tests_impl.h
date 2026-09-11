@@ -111,7 +111,7 @@ void test_schnorrsig_mw_api(secp256k1_scratch *scratch) {
     CHECK(ecount == 3);
     CHECK(secp256k1_schnorrsig_mw_verify_batch(vrfy, scratch, &sigptr, &msgptr, &pkptr, (size_t)1 << (sizeof(size_t)*8-1)) == 0);
     CHECK(ecount == 4);
-    CHECK(secp256k1_schnorrsig_mw_verify_batch(vrfy, scratch, &sigptr, &msgptr, &pkptr, 1 << 31) == 0);
+    CHECK(secp256k1_schnorrsig_mw_verify_batch(vrfy, scratch, &sigptr, &msgptr, &pkptr, (size_t)1 << 31) == 0);
     CHECK(ecount == 5);
 
     secp256k1_context_destroy(none);

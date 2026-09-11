@@ -241,19 +241,18 @@ static SECP256K1_INLINE const secp256k1_hash_ctx* secp256k1_get_hash_context(con
 #ifdef ENABLE_MODULE_GENERATOR
 #include "../include/secp256k1_scratch.h"
 
-/* Under CC=g++, definitions need an explicit extern "C" block. A prior
- * declaration in the header is not enough for these symbols (unlike most
- * other APIs); without this, g++ emits C++-mangled names and static benches
- * fail to link. */
+/* SECP256K1_API on the definition is required for Windows DLL export
+ * (__declspec(dllexport)). The extern "C" wrap is required so g++ does not
+ * mangle the names (header prototypes alone are not enough here). */
 #ifdef __cplusplus
 extern "C" {
 #endif
-secp256k1_scratch *secp256k1_scratch_space_create(const secp256k1_context* ctx, size_t max_size) {
+SECP256K1_API secp256k1_scratch *secp256k1_scratch_space_create(const secp256k1_context* ctx, size_t max_size) {
     VERIFY_CHECK(ctx != NULL);
     return secp256k1_scratch_create(&ctx->error_callback, max_size);
 }
 
-void secp256k1_scratch_space_destroy(const secp256k1_context *ctx, secp256k1_scratch* scratch) {
+SECP256K1_API void secp256k1_scratch_space_destroy(const secp256k1_context *ctx, secp256k1_scratch* scratch) {
     VERIFY_CHECK(ctx != NULL);
     secp256k1_scratch_destroy(&ctx->error_callback, scratch);
 }

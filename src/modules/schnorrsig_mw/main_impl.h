@@ -225,7 +225,7 @@ int secp256k1_schnorrsig_mw_verify_batch(const secp256k1_context *ctx, secp256k1
     VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(scratch != NULL);
     ARG_CHECK(n_sigs <= SIZE_MAX / 2);
-    ARG_CHECK(n_sigs < (size_t)(1 << 31));
+    ARG_CHECK(n_sigs < ((size_t)1 << 31));
 
     secp256k1_zkp_sha256_initialize(ctx, &sha);
     if (!secp256k1_schnorrsig_mw_verify_batch_init_randomizer(ctx, &ecmult_context, &sha, sig, msg32, pk, n_sigs)) {

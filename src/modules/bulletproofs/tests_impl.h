@@ -582,12 +582,15 @@ void test_multi_party_bulletproof(size_t n_parties, secp256k1_scratch* scratch, 
     unsigned char nonces[10][32];
     unsigned char blinds[10][32];
     const unsigned char* blind_ptr[1];
-    secp256k1_pedersen_commitment* partial_commits[10];
+    secp256k1_pedersen_commitment partial_commits_buf[10];
+    secp256k1_pedersen_commitment *partial_commits[10];
     uint64_t value[1] = {11223344};
     secp256k1_pedersen_commitment commit[1];
     const secp256k1_pedersen_commitment *commit_ptr[1];
-    secp256k1_pubkey* t_1s[10];
-    secp256k1_pubkey* t_2s[10];
+    secp256k1_pubkey t_1s_buf[10];
+    secp256k1_pubkey t_2s_buf[10];
+    secp256k1_pubkey *t_1s[10];
+    secp256k1_pubkey *t_2s[10];
     secp256k1_pubkey t_1_sum;
     secp256k1_pubkey t_2_sum;
     unsigned char tau_x_sum[32];
@@ -607,7 +610,7 @@ void test_multi_party_bulletproof(size_t n_parties, secp256k1_scratch* scratch, 
         random_scalar_order_test(&tmp_s);
         secp256k1_scalar_get_b32(blinds[j], &tmp_s);
 
-        partial_commits[j] = malloc(sizeof(secp256k1_pedersen_commitment));
+        partial_commits[j] = &partial_commits_buf[j];
 
         if (j == 0) {
             CHECK(secp256k1_pedersen_commit(CTX, partial_commits[j], blinds[j], value[0], &secp256k1_generator_const_h, &secp256k1_generator_const_g) == 1);
@@ -620,8 +623,8 @@ void test_multi_party_bulletproof(size_t n_parties, secp256k1_scratch* scratch, 
     commit_ptr[0] = commit;
 
     for (j=0;j<n_parties;j++) {
-        t_1s[j] = malloc(sizeof(secp256k1_pubkey));
-        t_2s[j] = malloc(sizeof(secp256k1_pubkey));
+        t_1s[j] = &t_1s_buf[j];
+        t_2s[j] = &t_2s_buf[j];
         blind_ptr[0] = blinds[j];
         CHECK(secp256k1_bulletproof_rangeproof_prove(CTX, scratch, gens, NULL, NULL, NULL, t_1s[j], t_2s[j], value, NULL, blind_ptr, commit_ptr, 1, &secp256k1_generator_const_h, 64, common_nonce, nonces[j], NULL, 0, NULL) == 1);
     }
