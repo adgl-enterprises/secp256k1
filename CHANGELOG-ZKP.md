@@ -3,7 +3,15 @@
 All notable changes to the ZKP modules and related packaging in this fork will be documented in this file.
 
 The format matches [CHANGELOG.md](./CHANGELOG.md) and is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
-Package and library versions omit the `-zkp` suffix (for example, tag `v0.8.1-zkp` corresponds to package version `0.8.1`); the suffix appears only in release tags and in this changelog.
+Package and library versions omit the `-zkp` suffix (for example, tag `v0.8.2-zkp` corresponds to package version `0.8.2`); the suffix appears only in release tags and in this changelog.
+
+## [0.8.2-zkp] - 2026-09-13
+
+#### Fixed
+ - build: Fixed C++ `-fpermissive` builds for the scratch-space API by wrapping definitions in an `extern "C"` block instead of `extern "C" SECP256K1_API` (double `extern`).
+
+#### ABI Compatibility
+The ABI is backward compatible with version 0.8.1 (tag `v0.8.1-zkp`).
 
 ## [0.8.1-zkp] - 2026-09-11
 
@@ -37,5 +45,6 @@ The ABI is backward compatible with version 0.8.0 (tag `v0.8.0-zkp`).
 #### ABI Compatibility
 This is the first ZKP release on top of upstream 0.8.0. Compared to upstream 0.8.0 without ZKP modules, new public symbols are introduced for the modules listed above. Otherwise, the non-ZKP ABI matches upstream 0.8.0.
 
+[0.8.2-zkp]: https://github.com/adgl-enterprises/secp256k1/compare/v0.8.1-zkp...v0.8.2-zkp
 [0.8.1-zkp]: https://github.com/adgl-enterprises/secp256k1/compare/v0.8.0-zkp...v0.8.1-zkp
 [0.8.0-zkp]: https://github.com/adgl-enterprises/secp256k1/compare/v0.8.0...v0.8.0-zkp
