@@ -243,25 +243,28 @@ static SECP256K1_INLINE const secp256k1_hash_ctx* secp256k1_get_hash_context(con
 #include "../include/secp256k1_scratch.h"
 
 #ifdef __cplusplus
-#define SECP256K1_SCRATCH_API extern "C" SECP256K1_API
-#else
-#define SECP256K1_SCRATCH_API SECP256K1_API
+extern "C" {
 #endif
-
-#else
-#define SECP256K1_SCRATCH_API static
 #endif
 /* END ZKP */
 
-SECP256K1_SCRATCH_API secp256k1_scratch *secp256k1_scratch_space_create(const secp256k1_context* ctx, size_t max_size) {
+SECP256K1_API secp256k1_scratch *secp256k1_scratch_space_create(const secp256k1_context* ctx, size_t max_size) {
     VERIFY_CHECK(ctx != NULL);
     return secp256k1_scratch_create(&ctx->error_callback, max_size);
 }
 
-SECP256K1_SCRATCH_API void secp256k1_scratch_space_destroy(const secp256k1_context *ctx, secp256k1_scratch* scratch) {
+SECP256K1_API void secp256k1_scratch_space_destroy(const secp256k1_context *ctx, secp256k1_scratch* scratch) {
     VERIFY_CHECK(ctx != NULL);
     secp256k1_scratch_destroy(&ctx->error_callback, scratch);
 }
+
+/* BEGIN ZKP */
+#ifdef ENABLE_MODULE_GENERATOR
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+#endif
+/* END ZKP */
 
 /* Mark memory as no-longer-secret for the purpose of analysing constant-time behaviour
  *  of the software.
