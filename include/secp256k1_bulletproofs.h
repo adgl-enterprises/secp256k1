@@ -105,13 +105,27 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bulletproof_rangeproof_
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4) SECP256K1_ARG_NONNULL(8);
 
 /** Extracts the shared and private rewind payloads from a single-commit rangeproof given secret nonces
- *  Returns: 1: rewind data was extracted and matched the input commit
- *           0: one of the above was not true, extraction failed
+ *
+ *  Rewinding is not authenticated. A wrong nonce, or a commit, min_value or extra_commit other than the ones
+ *  the proof was created with, still returns 1 and yields unrelated bytes. The caller must validate the
+ *  recovered data itself, e.g. by recomputing the Pedersen commitment from it. MWEB wallets do this by
+ *  rebuilding the output commitment from the recovered shared message and discarding the output on mismatch.
+ *
+ *  The message flags stored in the high nibble of proof[64] are not bound by the proof and are ignored by
+ *  verification, so anyone relaying a proof can change them without invalidating it. A changed flag makes
+ *  this function return 0 or recover the wrong message. Callers that need rewinding to be reliable must
+ *  authenticate the full proof bytes by other means. MWEB does this: the sender's output signature covers a
+ *  hash of the entire proof, so a modified proof invalidates the output.
+ *
+ *  Returns: 1: every requested message whose nonce was given was extracted (but see above)
+ *           0: the proof is malformed or a message could not be decoded; nothing was extracted
  *  Args:       ctx: pointer to a context object (cannot be NULL)
- *  Out: shared_msg: pointer to 32-byte array for shared message to be extracted
- *   shared_msg_len: pointer to length of shared message array. This will be set to 0 if no shared message is extracted.
- *      private_msg: pointer to 32-byte array for private message to be extracted
- *  private_msg_len: pointer to length of private message array. This will be set to 0 if no private message is extracted.
+ *  Out: shared_msg: pointer to array for the 32-byte shared message to be extracted
+ *  In/Out: shared_msg_len: in: size of shared_msg (at most 32 bytes are written). Out: number of bytes
+ *                  written, or 0 if no shared message was extracted (cannot be NULL if shared_msg is not NULL)
+ *      private_msg: pointer to array for the 32-byte private message to be extracted
+ *  In/Out: private_msg_len: in: size of private_msg (at most 32 bytes are written). Out: number of bytes
+ *                  written, or 0 if no private message was extracted (cannot be NULL if private_msg is not NULL)
  *  In:       proof: byte-serialized rangeproof (cannot be NULL)
  *             plen: length of every individual proof
  *        min_value: minimum value that the proof ranges over
@@ -140,6 +154,13 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bulletproof_rangeproof_
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(6) SECP256K1_ARG_NONNULL(9) SECP256K1_ARG_NONNULL(10);
 
 /** Produces an aggregate Bulletproof rangeproof for a set of Pedersen commitments
+ *
+ *  The blinding factors are not checked. One that is greater than or equal to the group order is reduced
+ *  (for the first one this is recorded in the proof so rewinding returns the original 32 bytes), and an
+ *  all-zero one is accepted even though the commitment then reveals its value. The caller is responsible
+ *  for using valid, secret blinding factors. MWEB derives them with secp256k1_blind_switch, whose output
+ *  is always below the group order and is zero only with negligible probability.
+ *
  *  Returns: 1: rangeproof was successfully created
  *           0: rangeproof could not be created, or out of memory
  *  Args:       ctx: pointer to a context object initialized for signing and verification (cannot be NULL)
@@ -161,7 +182,8 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bulletproof_rangeproof_
  *    private_nonce: only for multi-party; random 32-byte seed used to derive private blinding factors
  *     extra_commit: additonal data committed to by the rangeproof
  * extra_commit_len: length of additional data
- *         message: optional 32 bytes of message that can be recovered by rewinding with the correct nonce
+ *          message: optional 32-byte message, recoverable by rewinding with `nonce`; it replaces the value in
+ *                   the shared payload and requires n_commits == 1
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_bulletproof_rangeproof_prove(
     const secp256k1_context* ctx,

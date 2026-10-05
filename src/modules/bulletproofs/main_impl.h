@@ -268,6 +268,8 @@ int secp256k1_bulletproof_rangeproof_prove(
     secp256k1_generator_load(&value_genp, value_gen);
     for (i = 0; i < n_commits; i++) {
         int overflow;
+        /* Zero and overflowing blinding factors are accepted; keeping them valid is the caller's job.
+         * Overflow of the first one is recorded in the proof flags so rewind returns the original bytes. */
         secp256k1_scalar_set_b32(&blinds[i], blind[i], &overflow);
         if (i == 0) {
             private_msg_overflow = overflow;

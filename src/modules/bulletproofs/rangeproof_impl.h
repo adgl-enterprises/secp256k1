@@ -554,6 +554,10 @@ static int secp256k1_bulletproof_rangeproof_prove_impl(
         secp256k1_zkp_sha256_finalize(ctx, &sha256, commit);
     }
 
+    if (message != NULL && n_commits != 1) {
+        return 0;
+    }
+
     secp256k1_scalar_chacha20(&alpha, &rho, nonce, 0);
     secp256k1_scalar_chacha20(&tau1, &tau2, private_nonce, 1);
 
@@ -566,10 +570,6 @@ static int secp256k1_bulletproof_rangeproof_prove_impl(
         secp256k1_ge_set_gej(&tge[1], &tmpj);
 
         return 1;
-    }
-
-    if (message != NULL && n_commits != 1) {
-        return 0;
     }
 
     /* Encrypt the rewind payload into alpha, so it will be recoverable from -mu by someone who knows `nonce` */
@@ -754,7 +754,9 @@ static int secp256k1_bulletproof_rangeproof_prove_impl(
     secp256k1_scalar_get_b32(&proof[0], &taux);
     secp256k1_scalar_get_b32(&proof[32], &mu);
     secp256k1_bulletproof_serialize_points(&proof[64], out_pt, 4);
-    /* The verifier only reads the low nibble of proof[64] (point parities). */
+    /* The verifier only reads the low nibble of proof[64] (point parities). The flags in the high nibble
+     * are not hashed into the transcript, so they are not bound by the proof and can be changed without
+     * invalidating it; callers that rely on rewinding must authenticate the full proof bytes. */
     proof[64] |= proof_flags;
 
     /* Mix this into the hash so the input to the inner product proof is fixed */
@@ -779,13 +781,25 @@ static int secp256k1_bulletproof_rangeproof_prove_impl(
 static int secp256k1_bulletproof_rangeproof_rewind_impl(const secp256k1_context *ctx, unsigned char *shared_msg, size_t *shared_msg_len, unsigned char *private_msg, size_t *private_msg_len, const unsigned char *proof, const size_t plen, uint64_t min_value, const secp256k1_pedersen_commitment *pcommit, const secp256k1_generator *value_gen, const unsigned char *shared_nonce, const unsigned char *private_nonce, const unsigned char *extra_commit, size_t extra_commit_len) {
     secp256k1_sha256 sha256;
     unsigned char commit[32] = { 0 };
+    unsigned char shared_out[32];
+    unsigned char private_out[32];
     unsigned char lrparity;
     unsigned char proof_flags;
     secp256k1_scalar taux, mu;
     secp256k1_scalar alpha, rho, tau1, tau2;
     secp256k1_scalar x, z;
     secp256k1_ge commitp, value_genp;
+    const size_t shared_cap = shared_msg_len != NULL ? *shared_msg_len : 0;
+    const size_t private_cap = private_msg_len != NULL ? *private_msg_len : 0;
     int overflow;
+    int ret = 1;
+
+    if (shared_msg_len != NULL) {
+        *shared_msg_len = 0;
+    }
+    if (private_msg_len != NULL) {
+        *private_msg_len = 0;
+    }
 
     if (plen < 64 + 128 + 1 || plen > SECP256K1_BULLETPROOF_MAX_PROOF) {
         return 0;
@@ -883,15 +897,11 @@ static int secp256k1_bulletproof_rangeproof_rewind_impl(const secp256k1_context 
         secp256k1_scalar_negate(&taux, &taux);
 
         if (private_msg != NULL) {
-            if (!secp256k1_bulletproof_scalar_to_message32(commit, &taux, !!(proof_flags & SECP256K1_BULLETPROOF_PRIVATE_MSG_OVERFLOW))) {
-                return 0;
-            }
-            *private_msg_len = *private_msg_len > 32 ? 32 : *private_msg_len;
-            memcpy(private_msg, commit, *private_msg_len);
+            ret = secp256k1_bulletproof_scalar_to_message32(private_out, &taux, !!(proof_flags & SECP256K1_BULLETPROOF_PRIVATE_MSG_OVERFLOW));
         }
     }
 
-    if (shared_nonce != NULL) {
+    if (ret && shared_nonce != NULL) {
         secp256k1_scalar_chacha20(&alpha, &rho, shared_nonce, 0);
 
         /* Compute candidate mu and add to (negated) mu from proof to recover the shared payload */
@@ -901,18 +911,34 @@ static int secp256k1_bulletproof_rangeproof_rewind_impl(const secp256k1_context 
 
         if (shared_msg != NULL) {
             if (proof_flags & SECP256K1_BULLETPROOF_SHARED_MSG_PRESENT) {
-                if (!secp256k1_bulletproof_scalar_to_message32(commit, &mu, !!(proof_flags & SECP256K1_BULLETPROOF_SHARED_MSG_OVERFLOW))) {
-                    return 0;
-                }
+                ret = secp256k1_bulletproof_scalar_to_message32(shared_out, &mu, !!(proof_flags & SECP256K1_BULLETPROOF_SHARED_MSG_OVERFLOW));
             } else {
-                secp256k1_scalar_get_b32(commit, &mu);
+                secp256k1_scalar_get_b32(shared_out, &mu);
             }
-            *shared_msg_len = *shared_msg_len > 32 ? 32 : *shared_msg_len;
-            memcpy(shared_msg, commit, *shared_msg_len);
         }
     }
 
-    return 1;
+    /* Messages are only written once every requested one has been recovered */
+    if (ret) {
+        if (private_msg != NULL && private_nonce != NULL) {
+            *private_msg_len = private_cap > 32 ? 32 : private_cap;
+            memcpy(private_msg, private_out, *private_msg_len);
+        }
+        if (shared_msg != NULL && shared_nonce != NULL) {
+            *shared_msg_len = shared_cap > 32 ? 32 : shared_cap;
+            memcpy(shared_msg, shared_out, *shared_msg_len);
+        }
+    }
+
+    secp256k1_scalar_clear(&taux);
+    secp256k1_scalar_clear(&mu);
+    secp256k1_scalar_clear(&alpha);
+    secp256k1_scalar_clear(&rho);
+    secp256k1_scalar_clear(&tau1);
+    secp256k1_scalar_clear(&tau2);
+    secp256k1_memclear_explicit(shared_out, sizeof(shared_out));
+    secp256k1_memclear_explicit(private_out, sizeof(private_out));
+    return ret;
 }
 
 #endif

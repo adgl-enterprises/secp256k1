@@ -43,6 +43,8 @@ static void test_bulletproof_api(void) {
     unsigned char message[32];
     size_t shared_len;
     size_t private_len;
+    secp256k1_pubkey t_one, t_two;
+    const secp256k1_pedersen_commitment *mp_commits[2];
 
     int32_t ecount = 0;
 
@@ -277,10 +279,37 @@ static void test_bulletproof_api(void) {
     CHECK(secp256k1_bulletproof_rangeproof_rewind(none, shared_msg, &shared_len, private_msg, &private_len, proof, plen, 0, pcommit, &value_gen, blind, blind, NULL, 0) == 1);
     CHECK(memcmp(shared_msg, message, 32) == 0);
     CHECK(memcmp(private_msg, blind, 32) == 0);
+    /* A message whose nonce is not given is not extracted and reports a length of 0 */
+    shared_len = private_len = 32;
+    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, shared_msg, &shared_len, private_msg, &private_len, proof, plen, 0, pcommit, &value_gen, NULL, blind, NULL, 0) == 1);
+    CHECK(shared_len == 0 && private_len == 32);
+    /* A failed rewind extracts nothing */
+    shared_len = private_len = 32;
+    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, shared_msg, &shared_len, private_msg, &private_len, proof, 0, 0, pcommit, &value_gen, blind, blind, NULL, 0) == 0);
+    CHECK(shared_len == 0 && private_len == 0);
+    CHECK(ecount == 10);
     /* A message needs exactly one commitment */
     plen = 2000;
     CHECK(secp256k1_bulletproof_rangeproof_prove(both, scratch, gens, proof, &plen, NULL, NULL, NULL, value, NULL, blind_ptr, NULL, 2, &value_gen, 64, blind, NULL, NULL, 0, message) == 0);
     CHECK(ecount == 10);
+    /* ...including in the first step of a multi-party proof */
+    mp_commits[0] = &pcommit[0];
+    mp_commits[1] = &pcommit[1];
+    CHECK(secp256k1_bulletproof_rangeproof_prove(both, scratch, gens, NULL, NULL, NULL, &t_one, &t_two, value, NULL, blind_ptr, mp_commits, 2, &value_gen, 64, blind, blind, NULL, 0, message) == 0);
+    CHECK(secp256k1_bulletproof_rangeproof_prove(both, scratch, gens, NULL, NULL, NULL, &t_one, &t_two, value, NULL, blind_ptr, mp_commits, 2, &value_gen, 64, blind, blind, NULL, 0, NULL) == 1);
+    CHECK(ecount == 10);
+
+    /* Not covered yet. These are not a priority at this time: the MWEB caller cannot reach any of them,
+     * since it always proves a single commitment with a hash-derived 32-byte message below the group order
+     * and a blinding factor from secp256k1_blind_switch, authenticates the full proof bytes with the output
+     * signature, and only rewinds the shared message into a 32-byte buffer.
+     * - A message >= the group order round-trips through SHARED_MSG_OVERFLOW.
+     * - A first blinding factor >= the group order round-trips through PRIVATE_MSG_OVERFLOW.
+     * - An all-zero blinding factor is accepted by prove.
+     * - Changing the flag bits in proof[64] still verifies, while rewind fails or recovers the wrong message.
+     * - A multi-party proof whose summed tau_x is zero is rejected in the final step.
+     * - A shared_msg_len or private_msg_len below 32 truncates the extracted message.
+     */
 
     secp256k1_bulletproof_generators_destroy(none, gens);
     secp256k1_bulletproof_generators_destroy(none, NULL);
