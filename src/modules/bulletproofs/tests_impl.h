@@ -37,12 +37,17 @@ static void test_bulletproof_api(void) {
     uint64_t value[4] = { 1234, 4567, 8910, 1112 } ;
     uint64_t min_value[4] = { 1000, 4567, 0, 5000 } ;
     const uint64_t *mv_ptr = min_value;
-    unsigned char rewind_blind[32];
-    uint64_t rewind_v;
+    unsigned char shared_msg[32];
+    unsigned char private_msg[32];
+    unsigned char expected_msg[32];
+    unsigned char message[32];
+    size_t shared_len;
+    size_t private_len;
 
     int32_t ecount = 0;
 
     memcpy(blind, "   i am not a blinding factor   ", blindlen);
+    memcpy(message, "a 32-byte message for rewinding!", sizeof(message));
     blind_ptr[0] = blind;
     blind_ptr[1] = blind;
     blind_ptr[2] = blind;
@@ -223,30 +228,59 @@ static void test_bulletproof_api(void) {
 
     /* Rewind */
     ecount = 0;
-    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, &rewind_v, rewind_blind, proof, plen, min_value[0], pcommit, &value_gen, blind, blind, 32, NULL) == 1);
+    shared_len = private_len = 32;
+    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, shared_msg, &shared_len, private_msg, &private_len, proof, plen, min_value[0], pcommit, &value_gen, blind, blind, blind, 32) == 1);
     CHECK(ecount == 0);
-    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, NULL, rewind_blind, proof, plen, min_value[0], pcommit, &value_gen, blind, blind, 32, NULL) == 0);
+    CHECK(shared_len == 32 && private_len == 32);
+    /* Without a message the shared payload is the value; the private payload is the blinding factor. */
+    memset(expected_msg, 0, 32);
+    expected_msg[30] = value[0] >> 8;
+    expected_msg[31] = value[0] & 0xFF;
+    CHECK(memcmp(shared_msg, expected_msg, 32) == 0);
+    CHECK(memcmp(private_msg, blind, 32) == 0);
+    /* Either half may be omitted */
+    shared_len = 32;
+    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, shared_msg, &shared_len, NULL, NULL, proof, plen, min_value[0], pcommit, &value_gen, blind, NULL, blind, 32) == 1);
+    CHECK(memcmp(shared_msg, expected_msg, 32) == 0);
+    private_len = 32;
+    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, NULL, NULL, private_msg, &private_len, proof, plen, min_value[0], pcommit, &value_gen, NULL, blind, blind, 32) == 1);
+    CHECK(memcmp(private_msg, blind, 32) == 0);
+    CHECK(ecount == 0);
+    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, NULL, NULL, NULL, NULL, proof, plen, min_value[0], pcommit, &value_gen, blind, blind, blind, 32) == 0);
     CHECK(ecount == 1);
-    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, &rewind_v, NULL, proof, plen, min_value[0], pcommit, &value_gen, blind, blind, 32, NULL) == 0);
+    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, shared_msg, NULL, private_msg, &private_len, proof, plen, min_value[0], pcommit, &value_gen, blind, blind, blind, 32) == 0);
     CHECK(ecount == 2);
-    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, &rewind_v, rewind_blind, NULL, plen, min_value[0], pcommit, &value_gen, blind, blind, 32, NULL) == 0);
+    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, shared_msg, &shared_len, private_msg, NULL, proof, plen, min_value[0], pcommit, &value_gen, blind, blind, blind, 32) == 0);
     CHECK(ecount == 3);
-    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, &rewind_v, rewind_blind, proof, 0, min_value[0], pcommit, &value_gen, blind, blind, 32, NULL) == 0);
-    CHECK(ecount == 3);
-    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, &rewind_v, rewind_blind, proof, plen, 0, pcommit, &value_gen, blind, blind, 32, NULL) == 0);
-    CHECK(ecount == 3);
-    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, &rewind_v, rewind_blind, proof, plen, min_value[0], NULL, &value_gen, blind, blind, 32, NULL) == 0);
+    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, shared_msg, &shared_len, private_msg, &private_len, NULL, plen, min_value[0], pcommit, &value_gen, blind, blind, blind, 32) == 0);
     CHECK(ecount == 4);
-    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, &rewind_v, rewind_blind, proof, plen, min_value[0], pcommit, NULL, blind, blind, 32, NULL) == 0);
+    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, shared_msg, &shared_len, private_msg, &private_len, proof, 0, min_value[0], pcommit, &value_gen, blind, blind, blind, 32) == 0);
+    CHECK(ecount == 4);
+    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, shared_msg, &shared_len, private_msg, &private_len, proof, plen, min_value[0], NULL, &value_gen, blind, blind, blind, 32) == 0);
     CHECK(ecount == 5);
-    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, &rewind_v, rewind_blind, proof, plen, min_value[0], pcommit, &value_gen, NULL, blind, 32, NULL) == 0);
+    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, shared_msg, &shared_len, private_msg, &private_len, proof, plen, min_value[0], pcommit, NULL, blind, blind, blind, 32) == 0);
     CHECK(ecount == 6);
-    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, &rewind_v, rewind_blind, proof, plen, min_value[0], pcommit, &value_gen, blind, NULL, 32, NULL) == 0);
+    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, shared_msg, &shared_len, private_msg, &private_len, proof, plen, min_value[0], pcommit, &value_gen, NULL, NULL, blind, 32) == 0);
     CHECK(ecount == 7);
-    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, &rewind_v, rewind_blind, proof, plen, min_value[0], pcommit, &value_gen, blind, blind, 0, NULL) == 0);
-    CHECK(ecount == 7);
-    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, &rewind_v, rewind_blind, proof, plen, min_value[0], pcommit, &value_gen, blind, NULL, 0, NULL) == 0);
-    CHECK(ecount == 7);
+    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, NULL, NULL, private_msg, &private_len, proof, plen, min_value[0], pcommit, &value_gen, blind, blind, blind, 32) == 0);
+    CHECK(ecount == 8);
+    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, shared_msg, &shared_len, NULL, NULL, proof, plen, min_value[0], pcommit, &value_gen, blind, blind, blind, 32) == 0);
+    CHECK(ecount == 9);
+    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, shared_msg, &shared_len, private_msg, &private_len, proof, plen, min_value[0], pcommit, &value_gen, blind, blind, NULL, 32) == 0);
+    CHECK(ecount == 10);
+
+    /* A 32-byte message replaces the value in the shared payload */
+    plen = sizeof(proof);
+    CHECK(secp256k1_bulletproof_rangeproof_prove(both, scratch, gens, proof, &plen, NULL, NULL, NULL, value, NULL, blind_ptr, NULL, 1, &value_gen, 64, blind, NULL, NULL, 0, message) == 1);
+    CHECK(secp256k1_bulletproof_rangeproof_verify(both, scratch, gens, proof, plen, NULL, pcommit, 1, 64, &value_gen, NULL, 0) == 1);
+    shared_len = private_len = 32;
+    CHECK(secp256k1_bulletproof_rangeproof_rewind(none, shared_msg, &shared_len, private_msg, &private_len, proof, plen, 0, pcommit, &value_gen, blind, blind, NULL, 0) == 1);
+    CHECK(memcmp(shared_msg, message, 32) == 0);
+    CHECK(memcmp(private_msg, blind, 32) == 0);
+    /* A message needs exactly one commitment */
+    plen = 2000;
+    CHECK(secp256k1_bulletproof_rangeproof_prove(both, scratch, gens, proof, &plen, NULL, NULL, NULL, value, NULL, blind_ptr, NULL, 2, &value_gen, 64, blind, NULL, NULL, 0, message) == 0);
+    CHECK(ecount == 10);
 
     secp256k1_bulletproof_generators_destroy(none, gens);
     secp256k1_bulletproof_generators_destroy(none, NULL);
@@ -478,6 +512,11 @@ void test_bulletproof_rangeproof(size_t nbits, size_t expected_size, const secp2
     const secp256k1_ge *commitp_ptr[3];
     secp256k1_ge value_gen[3];
     unsigned char nonce[32];
+    unsigned char shared_msg[32];
+    unsigned char private_msg[32];
+    size_t shared_len;
+    size_t private_len;
+    size_t i;
     secp256k1_scratch *scratch = secp256k1_scratch_create(&CTX->error_callback, 10000000);
 
     memcpy(nonce, "my kingdom for some randomness!!", sizeof(nonce));
@@ -504,13 +543,13 @@ void test_bulletproof_rangeproof(size_t nbits, size_t expected_size, const secp2
     commitp_ptr[2] = &commitp2;
     secp256k1_pedersen_commitment_save(&pcommit, &commitp);
 
-    CHECK(secp256k1_bulletproof_rangeproof_prove_impl(CTX, scratch, proof, &plen, NULL, NULL, nbits, &v, NULL, &blind, &commitp, 1, &value_gen[0], gens, nonce, nonce, NULL, 0, NULL) == 1);
+    CHECK(secp256k1_bulletproof_rangeproof_prove_impl(CTX, scratch, proof, &plen, NULL, NULL, nbits, &v, NULL, &blind, &commitp, 1, &value_gen[0], gens, nonce, nonce, NULL, 0, 0, NULL) == 1);
     CHECK(plen == expected_size);
     nonce[0] ^= 1;
-    CHECK(secp256k1_bulletproof_rangeproof_prove_impl(CTX, scratch, proof2, &plen, NULL, NULL, nbits, &v, NULL, &blind, &commitp, 1, &value_gen[1], gens, nonce, nonce, NULL, 0, NULL) == 1);
+    CHECK(secp256k1_bulletproof_rangeproof_prove_impl(CTX, scratch, proof2, &plen, NULL, NULL, nbits, &v, NULL, &blind, &commitp, 1, &value_gen[1], gens, nonce, nonce, NULL, 0, 0, NULL) == 1);
     CHECK(plen == expected_size);
     nonce[0] ^= 2;
-    CHECK(secp256k1_bulletproof_rangeproof_prove_impl(CTX, scratch, proof3, &plen, NULL, NULL, nbits, &v, NULL, &blind, &commitp2, 1, &value_gen[2], gens, nonce, nonce, NULL, 0, NULL) == 1);
+    CHECK(secp256k1_bulletproof_rangeproof_prove_impl(CTX, scratch, proof3, &plen, NULL, NULL, nbits, &v, NULL, &blind, &commitp2, 1, &value_gen[2], gens, nonce, nonce, NULL, 0, 0, NULL) == 1);
     CHECK(plen == expected_size);
     nonce[0] ^= 3;
     /* Verify once */
@@ -521,12 +560,21 @@ void test_bulletproof_rangeproof(size_t nbits, size_t expected_size, const secp2
     CHECK(secp256k1_bulletproof_rangeproof_verify_impl(CTX, scratch, proof_ptr, 3, plen, nbits, NULL, commitp_ptr, 1, value_gen, gens, NULL, 0) == 1);
 
     /* Rewind */
-    CHECK(secp256k1_bulletproof_rangeproof_rewind_impl(CTX, &v_recovered, &blind_recovered, proof, plen, 0, &pcommit, &secp256k1_generator_const_g, nonce, NULL, 0, NULL) == 1);
+    shared_len = private_len = 32;
+    CHECK(secp256k1_bulletproof_rangeproof_rewind_impl(CTX, shared_msg, &shared_len, private_msg, &private_len, proof, plen, 0, &pcommit, &secp256k1_generator_const_g, nonce, nonce, NULL, 0) == 1);
+    v_recovered = 0;
+    for (i = 24; i < 32; i++) {
+        v_recovered = (v_recovered << 8) | shared_msg[i];
+    }
     CHECK(v_recovered == v);
+    secp256k1_scalar_set_b32(&blind_recovered, private_msg, NULL);
     CHECK(secp256k1_scalar_eq(&blind_recovered, &blind) == 1);
 
+    /* Rewinding is unauthenticated: a wrong nonce yields unrelated bytes */
     nonce[0] ^= 111;
-    CHECK(secp256k1_bulletproof_rangeproof_rewind_impl(CTX, &v_recovered, &blind_recovered, proof, plen, 0, &pcommit, &secp256k1_generator_const_g, nonce, NULL, 0, NULL) == 0);
+    CHECK(secp256k1_bulletproof_rangeproof_rewind_impl(CTX, shared_msg, &shared_len, private_msg, &private_len, proof, plen, 0, &pcommit, &secp256k1_generator_const_g, nonce, nonce, NULL, 0) == 1);
+    secp256k1_scalar_set_b32(&blind_recovered, private_msg, NULL);
+    CHECK(secp256k1_scalar_eq(&blind_recovered, &blind) == 0);
 
     secp256k1_scratch_destroy(&CTX->error_callback, scratch);
 }
@@ -564,7 +612,7 @@ void test_bulletproof_rangeproof_aggregate(size_t nbits, size_t n_commits, size_
         secp256k1_bulletproof_update_commit(CTX, commit, &commitp[i], &value_gen);
     }
 
-    CHECK(secp256k1_bulletproof_rangeproof_prove_impl(CTX, scratch, proof, &plen, NULL, NULL, nbits, v, NULL, blind, commitp, n_commits, &value_gen, gens, nonce, nonce, NULL, 0, NULL) == 1);
+    CHECK(secp256k1_bulletproof_rangeproof_prove_impl(CTX, scratch, proof, &plen, NULL, NULL, nbits, v, NULL, blind, commitp, n_commits, &value_gen, gens, nonce, nonce, NULL, 0, 0, NULL) == 1);
     CHECK(plen == expected_size);
     CHECK(secp256k1_bulletproof_rangeproof_verify_impl(CTX, scratch, &proof_ptr, 1, plen, nbits, NULL, &constptr, n_commits, &value_gen, gens, NULL, 0) == 1);
 
