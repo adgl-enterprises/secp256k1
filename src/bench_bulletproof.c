@@ -55,7 +55,8 @@ static void bench_bulletproof_common_setup(bench_bulletproof_t *data) {
 static void bench_bulletproof_rangeproof_setup(void* arg) {
     bench_bulletproof_rangeproof_t *data = (bench_bulletproof_rangeproof_t*)arg;
     size_t i;
-    uint64_t v;
+    unsigned char msg[32];
+    size_t msg_len = sizeof(msg);
     unsigned char blind[33] = "and my kingdom too for a blinder";
 
     bench_bulletproof_common_setup (data->common);
@@ -88,7 +89,8 @@ static void bench_bulletproof_rangeproof_setup(void* arg) {
     CHECK(secp256k1_bulletproof_rangeproof_verify(data->common->ctx, data->common->scratch, data->common->generators, data->common->proof[0], data->common->plen, NULL, data->commit[0], data->n_commits, data->nbits, data->common->value_gen, NULL, 0) == 1);
     CHECK(secp256k1_bulletproof_rangeproof_verify_multi(data->common->ctx, data->common->scratch, data->common->generators, (const unsigned char **) data->common->proof, data->common->n_proofs, data->common->plen, NULL, (const secp256k1_pedersen_commitment **) data->commit, data->n_commits, data->nbits, data->common->value_gen, NULL, 0) == 1);
     if (data->n_commits == 1) {
-        CHECK(secp256k1_bulletproof_rangeproof_rewind(data->common->ctx, &v, blind, data->common->proof[0], data->common->plen, 0, data->commit[0], &data->common->value_gen[0], data->common->nonce, NULL, 0, NULL) == 1);
+        CHECK(secp256k1_bulletproof_rangeproof_rewind(data->common->ctx, msg, &msg_len, NULL, NULL, data->common->proof[0], data->common->plen, 0, data->commit[0], &data->common->value_gen[0], data->common->nonce, NULL, NULL, 0) == 1);
+        CHECK(msg_len == sizeof(msg));
     }
 }
 
@@ -141,28 +143,32 @@ static void bench_bulletproof_rangeproof_verify(void* arg, int iter) {
     }
 }
 
-static void bench_bulletproof_rangeproof_rewind_succeed(void* arg, int iter) {
+static void bench_bulletproof_rangeproof_rewind_shared(void* arg, int iter) {
     int i;
-    uint64_t v;
-    unsigned char blind[32];
+    unsigned char shared_msg[32];
+    size_t shared_len;
     bench_bulletproof_rangeproof_t *data = (bench_bulletproof_rangeproof_t*)arg;
 
     for (i = 0; i < iter; i++) {
-        CHECK(secp256k1_bulletproof_rangeproof_rewind(data->common->ctx, &v, blind, data->common->proof[0], data->common->plen, 0, data->commit[0], &data->common->value_gen[0], data->common->nonce, NULL, 0, NULL) == 1);
+        shared_len = sizeof(shared_msg);
+        CHECK(secp256k1_bulletproof_rangeproof_rewind(data->common->ctx, shared_msg, &shared_len, NULL, NULL, data->common->proof[0], data->common->plen, 0, data->commit[0], &data->common->value_gen[0], data->common->nonce, NULL, NULL, 0) == 1);
     }
 }
 
-static void bench_bulletproof_rangeproof_rewind_fail(void* arg, int iter) {
+/* The proof is created without a private nonce, so `nonce` also recovers the private payload. */
+static void bench_bulletproof_rangeproof_rewind_shared_private(void* arg, int iter) {
     int i;
-    uint64_t v;
-    unsigned char blind[32];
+    unsigned char shared_msg[32];
+    unsigned char private_msg[32];
+    size_t shared_len;
+    size_t private_len;
     bench_bulletproof_rangeproof_t *data = (bench_bulletproof_rangeproof_t*)arg;
 
-    data->common->nonce[0] ^= 1;
     for (i = 0; i < iter; i++) {
-        CHECK(secp256k1_bulletproof_rangeproof_rewind(data->common->ctx, &v, blind, data->common->proof[0], data->common->plen, 0, data->commit[0], &data->common->value_gen[0], data->common->nonce, NULL, 0, NULL) == 0);
+        shared_len = sizeof(shared_msg);
+        private_len = sizeof(private_msg);
+        CHECK(secp256k1_bulletproof_rangeproof_rewind(data->common->ctx, shared_msg, &shared_len, private_msg, &private_len, data->common->proof[0], data->common->plen, 0, data->commit[0], &data->common->value_gen[0], data->common->nonce, data->common->nonce, NULL, 0) == 1);
     }
-    data->common->nonce[0] ^= 1;
 }
 
 static void run_rangeproof_test(bench_bulletproof_rangeproof_t *data, size_t nbits, size_t n_commits) {
@@ -181,10 +187,10 @@ static void run_rangeproof_test(bench_bulletproof_rangeproof_t *data, size_t nbi
     run_benchmark(str, bench_bulletproof_rangeproof_verify, bench_bulletproof_rangeproof_setup, bench_bulletproof_rangeproof_teardown, (void *)data, 5, data->common->iters);
 
     if (n_commits == 1) {
-        sprintf(str, "bulletproof_rewind_succeed, %i, ", (int)nbits);
-        run_benchmark(str, bench_bulletproof_rangeproof_rewind_succeed, bench_bulletproof_rangeproof_setup, bench_bulletproof_rangeproof_teardown, (void *)data, 5, data->common->iters);
-        sprintf(str, "bulletproof_rewind_fail, %i, ", (int)nbits);
-        run_benchmark(str, bench_bulletproof_rangeproof_rewind_fail, bench_bulletproof_rangeproof_setup, bench_bulletproof_rangeproof_teardown, (void *)data, 5, data->common->iters);
+        sprintf(str, "bulletproof_rewind_shared, %i, ", (int)nbits);
+        run_benchmark(str, bench_bulletproof_rangeproof_rewind_shared, bench_bulletproof_rangeproof_setup, bench_bulletproof_rangeproof_teardown, (void *)data, 5, data->common->iters);
+        sprintf(str, "bulletproof_rewind_shared_private, %i, ", (int)nbits);
+        run_benchmark(str, bench_bulletproof_rangeproof_rewind_shared_private, bench_bulletproof_rangeproof_setup, bench_bulletproof_rangeproof_teardown, (void *)data, 5, data->common->iters);
     }
 
     data->common->n_proofs = 2;

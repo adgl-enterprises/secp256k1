@@ -209,11 +209,14 @@ run_docker_presets() {
         --env 'ECMULTGENKB=2'
 
     # UBSan/ASan — caught rands64 signed overflow.
+    # ASan exports __odr_asan_gen_* markers for the library's exported variables,
+    # which symbol-check.py rejects; upstream CI disables the check for this job too.
     run_docker_ci "ubsan-asan" \
         --env CC=clang \
         --env 'CFLAGS=-fsanitize=undefined,address -fno-sanitize-recover=undefined,address -g' \
         --env WITH_VALGRIND=no \
         --env CTIMETESTS=no \
+        --env SYMBOL_CHECK=no \
         --env 'UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1' \
         --env 'ASAN_OPTIONS=detect_leaks=1'
 

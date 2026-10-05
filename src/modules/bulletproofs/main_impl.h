@@ -179,24 +179,27 @@ int secp256k1_bulletproof_rangeproof_verify_multi(const secp256k1_context* ctx, 
     return ret;
 }
 
-int secp256k1_bulletproof_rangeproof_rewind(const secp256k1_context* ctx, uint64_t *value, unsigned char *blind, const unsigned char *proof, size_t plen, uint64_t min_value, const secp256k1_pedersen_commitment* commit, const secp256k1_generator *value_gen, const unsigned char *nonce, const unsigned char *extra_commit, size_t extra_commit_len, unsigned char *message) {
-    secp256k1_scalar blinds;
-    int ret;
-
+int secp256k1_bulletproof_rangeproof_rewind(
+    const secp256k1_context* ctx, unsigned char* shared_msg, size_t* shared_msg_len,
+    unsigned char* private_msg, size_t* private_msg_len,
+    const unsigned char* proof, size_t plen, uint64_t min_value,
+    const secp256k1_pedersen_commitment* commit, const secp256k1_generator* value_gen,
+    const unsigned char* shared_nonce, const unsigned char* private_nonce,
+    const unsigned char* extra_commit, size_t extra_commit_len
+) {
     VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(value != NULL);
-    ARG_CHECK(blind != NULL);
+    ARG_CHECK(shared_msg != NULL || private_msg != NULL);
+    ARG_CHECK(shared_msg_len != NULL || shared_msg == NULL);
+    ARG_CHECK(private_msg_len != NULL || private_msg == NULL);
     ARG_CHECK(proof != NULL);
     ARG_CHECK(commit != NULL);
     ARG_CHECK(value_gen != NULL);
-    ARG_CHECK(nonce != NULL);
+    ARG_CHECK(shared_nonce != NULL || private_nonce != NULL);
+    ARG_CHECK(shared_msg != NULL || shared_nonce == NULL);
+    ARG_CHECK(private_msg != NULL || private_nonce == NULL);
     ARG_CHECK(extra_commit != NULL || extra_commit_len == 0);
 
-    ret = secp256k1_bulletproof_rangeproof_rewind_impl(ctx, value, &blinds, proof, plen, min_value, commit, value_gen, nonce, extra_commit, extra_commit_len, message);
-    if (ret == 1) {
-        secp256k1_scalar_get_b32(blind, &blinds);
-    }
-    return ret;
+    return secp256k1_bulletproof_rangeproof_rewind_impl(ctx, shared_msg, shared_msg_len, private_msg, private_msg_len, proof, plen, min_value, commit, value_gen, shared_nonce, private_nonce, extra_commit, extra_commit_len);
 }
 
 int secp256k1_bulletproof_rangeproof_prove(
@@ -216,6 +219,7 @@ int secp256k1_bulletproof_rangeproof_prove(
     size_t i;
     const unsigned char *secondary_nonce;
     secp256k1_ge *tge = NULL;
+    int private_msg_overflow = 0;
     size_t _zkp_scratch_cp;
 
     VERIFY_CHECK(ctx != NULL);
@@ -264,10 +268,11 @@ int secp256k1_bulletproof_rangeproof_prove(
     secp256k1_generator_load(&value_genp, value_gen);
     for (i = 0; i < n_commits; i++) {
         int overflow;
+        /* Zero and overflowing blinding factors are accepted; keeping them valid is the caller's job.
+         * Overflow of the first one is recorded in the proof flags so rewind returns the original bytes. */
         secp256k1_scalar_set_b32(&blinds[i], blind[i], &overflow);
-        if (overflow || secp256k1_scalar_is_zero(&blinds[i])) {
-            secp256k1_zkp_scratch_frame_end(ctx, scratch, _zkp_scratch_cp);
-            return 0;
+        if (i == 0) {
+            private_msg_overflow = overflow;
         }
 
         if (commits == NULL) {
@@ -307,7 +312,7 @@ int secp256k1_bulletproof_rangeproof_prove(
         }
     }
 
-    ret = secp256k1_bulletproof_rangeproof_prove_impl(ctx, scratch, proof, plen, tau_x, tge, nbits, value, min_value, blinds, commitp, n_commits, &value_genp, gens, nonce, secondary_nonce, extra_commit, extra_commit_len, message);
+    ret = secp256k1_bulletproof_rangeproof_prove_impl(ctx, scratch, proof, plen, tau_x, tge, nbits, value, min_value, blinds, commitp, n_commits, &value_genp, gens, nonce, secondary_nonce, extra_commit, extra_commit_len, private_msg_overflow, message);
 
     if (t_one != NULL && tau_x == NULL) {
         secp256k1_pubkey_save(t_one, &tge[0]);

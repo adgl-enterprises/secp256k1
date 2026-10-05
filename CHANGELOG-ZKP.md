@@ -3,7 +3,25 @@
 All notable changes to the ZKP modules and related packaging in this fork will be documented in this file.
 
 The format matches [CHANGELOG.md](./CHANGELOG.md) and is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
-Package and library versions omit the `-zkp` suffix (for example, tag `v0.8.2-zkp` corresponds to package version `0.8.2`); the suffix appears only in release tags and in this changelog.
+Starting with `0.8.1-zkp.3`, `MAJOR.MINOR.PATCH` is the next patch version after the upstream bitcoin-core/secp256k1 release a ZKP release is based on (as in upstream's own `-dev` versions), followed by a `-zkp` pre-release suffix. The first ZKP release on top of an upstream release is `MAJOR.MINOR.PATCH-zkp`, and later ones are `MAJOR.MINOR.PATCH-zkp.NUMBER`. (for example, tag `v0.8.1-zkp.3` is the fourth ZKP release on top of upstream `0.8.0`).
+
+## [0.8.1-zkp.3] - 2026-10-04
+
+#### Changed
+ - Module `bulletproofs`: Synced the rewind API with Litecoin's secp256k1-zkp. `secp256k1_bulletproof_rangeproof_rewind` now returns a 32-byte shared and a 32-byte private payload, each recovered with its own nonce, instead of the value and blinding factor. Rewinding is unauthenticated: a wrong nonce returns unrelated bytes instead of failing, so callers must validate the recovered data.
+ - Module `bulletproofs`: The optional message in `secp256k1_bulletproof_rangeproof_prove` is now 32 bytes (previously 20), replaces the value in the shared payload, and requires exactly one commitment. Prove no longer rejects blinding factors that overflow the group order or are zero.
+ - Module `commitment`: The exported pointer `secp256k1_generator_h` is now `const`.
+ - build: Package versions are now the next patch version after the upstream release with a `-zkp` or `-zkp.N` suffix (see above).
+
+#### Fixed
+ - Module `bulletproofs`: `secp256k1_bulletproof_rangeproof_rewind` reports a length of 0 for every message it doesn't extract and clears recovered secrets before returning. Prove rejects a message with `n_commits != 1` before the first step of a multi-party proof, and the multi-party `tauxc` zero check now tests `taux`.
+ - Module `bulletproofs`: Fixed the bulletproof benchmark build after the rewind API change.
+ - Scratch space: Reject allocation sizes that overflow when added to the header size (cherry-picked from upstream).
+ - ci: Disabled the symbol check in the `ci/local-smoke.sh` UBSan/ASan preset, matching upstream's sanitizer job.
+
+#### ABI Compatibility
+The signature of `secp256k1_bulletproof_rangeproof_rewind` changed incompatibly, and `secp256k1_generator_h` is now a `const` pointer.
+Otherwise, the library maintains backward compatibility with versions 0.8.0-zkp through 0.8.2-zkp.
 
 ## [0.8.2-zkp] - 2026-09-13
 
@@ -45,6 +63,7 @@ The ABI is backward compatible with version 0.8.0 (tag `v0.8.0-zkp`).
 #### ABI Compatibility
 This is the first ZKP release on top of upstream 0.8.0. Compared to upstream 0.8.0 without ZKP modules, new public symbols are introduced for the modules listed above. Otherwise, the non-ZKP ABI matches upstream 0.8.0.
 
+[0.8.1-zkp.3]: https://github.com/adgl-enterprises/secp256k1/compare/v0.8.2-zkp...v0.8.1-zkp.3
 [0.8.2-zkp]: https://github.com/adgl-enterprises/secp256k1/compare/v0.8.1-zkp...v0.8.2-zkp
 [0.8.1-zkp]: https://github.com/adgl-enterprises/secp256k1/compare/v0.8.0-zkp...v0.8.1-zkp
 [0.8.0-zkp]: https://github.com/adgl-enterprises/secp256k1/compare/v0.8.0...v0.8.0-zkp
