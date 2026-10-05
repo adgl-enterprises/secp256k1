@@ -27,7 +27,7 @@ static const secp256k1_generator secp256k1_generator_h_internal = {{
     0x36, 0xda, 0xc2, 0x8a, 0xf1, 0x76, 0x69, 0x68, 0xc3, 0x0c, 0x23, 0x13, 0xf3, 0xa3, 0x89, 0x04
 }};
 
-const secp256k1_generator *secp256k1_generator_h = &secp256k1_generator_h_internal;
+const secp256k1_generator * const secp256k1_generator_h = &secp256k1_generator_h_internal;
 
 static void secp256k1_pedersen_commitment_load(secp256k1_ge* ge, const secp256k1_pedersen_commitment* commit) {
     secp256k1_fe fe;
