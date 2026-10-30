@@ -120,19 +120,40 @@ void test_schnorrsig_mw_api(secp256k1_scratch *scratch) {
     secp256k1_context_destroy(both);
 }
 
+/* The BIP-schnorr vectors' nonce, SHA256(key32 || msg32): the default signing nonce in
+ * Litecoin Core v0.21.5.8. The default here is RFC6979, which signs with different bytes. */
+static int test_schnorrsig_mw_nonce_function_bipschnorr(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, void *data, unsigned int counter) {
+    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(CTX);
+    secp256k1_sha256 sha;
+    (void)data;
+    CHECK(algo16 == NULL);
+    CHECK(counter == 0);
+    secp256k1_sha256_initialize(&sha);
+    secp256k1_sha256_write(hash_ctx, &sha, key32, 32);
+    secp256k1_sha256_write(hash_ctx, &sha, msg32, 32);
+    secp256k1_sha256_finalize(hash_ctx, &sha, nonce32);
+    return 1;
+}
+
 /* Helper function for schnorrsig_bip_vectors
- * Signs the message and checks that it's the same as expected_sig. */
+ * Signs the message with the vectors' nonce and checks that it's the same as
+ * expected_sig, then checks that a default-nonce signature verifies. */
 void test_schnorrsig_mw_bip_vectors_check_signing(secp256k1_scratch *scratch, const unsigned char *sk, const unsigned char *pk_serialized, const unsigned char *msg, const unsigned char *expected_sig, const int expected_nonce_is_negated) {
     secp256k1_schnorrsig_mw sig;
     secp256k1_pubkey pk;
     const secp256k1_schnorrsig_mw *sigptr = &sig;
     const unsigned char *msgptr = msg;
     const secp256k1_pubkey *pkptr = &pk;
-
-    (void)expected_sig;
-    (void)expected_nonce_is_negated;
+    unsigned char serialized_sig[64];
+    int nonce_is_negated;
 
     CHECK(secp256k1_ec_pubkey_parse(CTX, &pk, pk_serialized, 33) == 1);
+    CHECK(secp256k1_schnorrsig_mw_sign(CTX, &sig, &nonce_is_negated, msg, sk, test_schnorrsig_mw_nonce_function_bipschnorr, NULL) == 1);
+    CHECK(nonce_is_negated == expected_nonce_is_negated);
+    CHECK(secp256k1_schnorrsig_mw_serialize(CTX, serialized_sig, &sig) == 1);
+    CHECK(secp256k1_memcmp_var(serialized_sig, expected_sig, 64) == 0);
+    CHECK(secp256k1_schnorrsig_mw_verify_batch(CTX, scratch, &sigptr, &msgptr, &pkptr, 1) == 1);
+
     CHECK(secp256k1_schnorrsig_mw_sign(CTX, &sig, NULL, msg, sk, NULL, NULL) == 1);
     CHECK(secp256k1_schnorrsig_mw_verify_batch(CTX, scratch, &sigptr, &msgptr, &pkptr, 1) == 1);
 }

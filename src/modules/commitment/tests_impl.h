@@ -290,6 +290,13 @@ void test_switch(void) {
     local_ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 
     CHECK(secp256k1_ec_pubkey_parse(local_ctx, &switch_pubkey, GENERATOR_J_COMPR, 33));
+    {
+        unsigned char j_roundtrip[33];
+        size_t j_len = sizeof(j_roundtrip);
+        CHECK(secp256k1_ec_pubkey_serialize(local_ctx, j_roundtrip, &j_len, &switch_pubkey, SECP256K1_EC_COMPRESSED));
+        CHECK(j_len == 33);
+        CHECK(secp256k1_memcmp_var(j_roundtrip, GENERATOR_J_COMPR, 33) == 0);
+    }
     secp256k1_rand256(blind);
     CHECK(secp256k1_blind_switch(local_ctx, blind_switch, blind, val, &secp256k1_generator_const_h, &secp256k1_generator_const_g, &switch_pubkey));
     CHECK(secp256k1_memcmp_var(blind_switch, blind, 32) != 0);
@@ -298,11 +305,32 @@ void test_switch(void) {
     secp256k1_context_destroy(local_ctx);
 }
 
+/* 2G as a commitment: prefixes 0x08 and 0x09 parse, other prefixes do not. */
+static void test_pedersen_commitment_fixed_vector(void) {
+    const unsigned char two_g[33] = {
+        0x09,
+        0xc6, 0x04, 0x7f, 0x94, 0x41, 0xed, 0x7d, 0x6d, 0x30, 0x45, 0x40, 0x6e, 0x95, 0xc0, 0x7c, 0xd8,
+        0x5c, 0x77, 0x8e, 0x4b, 0x8c, 0xef, 0x3c, 0xa7, 0xab, 0xac, 0x09, 0xb9, 0x5c, 0x70, 0x9e, 0xe5
+    };
+    unsigned char result[33];
+    secp256k1_pedersen_commitment parse;
+
+    CHECK(secp256k1_pedersen_commitment_parse(CTX, &parse, two_g));
+    CHECK(secp256k1_pedersen_commitment_serialize(CTX, result, &parse));
+    CHECK(secp256k1_memcmp_var(two_g, result, 33) == 0);
+
+    result[0] = 0x08;
+    CHECK(secp256k1_pedersen_commitment_parse(CTX, &parse, result));
+    result[0] = 0x0c;
+    CHECK(!secp256k1_pedersen_commitment_parse(CTX, &parse, result));
+}
+
 REPEAT_TEST_MULT(test_pedersen, 10)
 
 static const struct tf_test_entry tests_commitment[] = {
     CASE1(test_commitment_api),
     CASE1(test_pedersen),
+    CASE1(test_pedersen_commitment_fixed_vector),
     CASE1(test_multiple_generators),
     CASE1(test_switch),
 };
