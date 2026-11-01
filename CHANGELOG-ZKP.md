@@ -5,6 +5,16 @@ All notable changes to the ZKP modules and related packaging in this fork will b
 The format matches [CHANGELOG.md](./CHANGELOG.md) and is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Starting with `0.8.1-zkp.3`, `MAJOR.MINOR.PATCH` is the next patch version after the upstream bitcoin-core/secp256k1 release a ZKP release is based on (as in upstream's own `-dev` versions), followed by a `-zkp` pre-release suffix. The first ZKP release on top of an upstream release is `MAJOR.MINOR.PATCH-zkp`, and later ones are `MAJOR.MINOR.PATCH-zkp.NUMBER`. (for example, tag `v0.8.1-zkp.3` is the fourth ZKP release on top of upstream `0.8.0`).
 
+## [0.8.1-zkp.4] - 2026-10-29
+
+#### Fixed
+ - ZKP modules: Fixed `secp256k1_scalar_chacha20` on big-endian targets by reading the 32-byte seed with an explicit little-endian reader and byte-swapping ChaCha20 state words into scalar limbs unconditionally instead of gating on `WORDS_BIGENDIAN`.
+ - Module `bulletproofs`: Released the verifier's scratch frame when deserializing `A`/`S` or `T1`/`T2` fails in `secp256k1_bulletproof_rangeproof_verify` and `secp256k1_bulletproof_rangeproof_verify_multi`.
+ - Tests: Added deterministic `secp256k1_scalar_chacha20` test vectors, a regression test for malformed rangeproof points, a fixed-vector Pedersen commitment parse/serialize test, and BIP-schnorr signing vector checks in `schnorrsig-mw`.
+
+#### ABI Compatibility
+The ABI is backward compatible with version 0.8.1-zkp.3 (tag `v0.8.1-zkp.3`).
+
 ## [0.8.1-zkp.3] - 2026-10-04
 
 #### Changed
@@ -63,6 +73,7 @@ The ABI is backward compatible with version 0.8.0 (tag `v0.8.0-zkp`).
 #### ABI Compatibility
 This is the first ZKP release on top of upstream 0.8.0. Compared to upstream 0.8.0 without ZKP modules, new public symbols are introduced for the modules listed above. Otherwise, the non-ZKP ABI matches upstream 0.8.0.
 
+[0.8.1-zkp.4]: https://github.com/adgl-enterprises/secp256k1/compare/v0.8.1-zkp.3...v0.8.1-zkp.4
 [0.8.1-zkp.3]: https://github.com/adgl-enterprises/secp256k1/compare/v0.8.2-zkp...v0.8.1-zkp.3
 [0.8.2-zkp]: https://github.com/adgl-enterprises/secp256k1/compare/v0.8.1-zkp...v0.8.2-zkp
 [0.8.1-zkp]: https://github.com/adgl-enterprises/secp256k1/compare/v0.8.0-zkp...v0.8.1-zkp
