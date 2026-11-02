@@ -29,7 +29,9 @@ static void test_bulletproof_api(void) {
     secp256k1_pedersen_commitment pcommit[4];
     const secp256k1_pedersen_commitment *pcommit_arr[1];
     unsigned char proof[2000];
+    unsigned char malformed_proof[2000];
     const unsigned char *proof_ptr = proof;
+    const unsigned char *malformed_proof_ptr = malformed_proof;
     unsigned char blind[32];
     const unsigned char *blind_ptr[4];
     size_t blindlen = sizeof(blind);
@@ -133,6 +135,37 @@ static void test_bulletproof_api(void) {
     CHECK(ecount == 13);
     CHECK(secp256k1_bulletproof_rangeproof_prove(both, scratch, gens, proof, &plen, NULL, NULL, NULL, value, min_value, blind_ptr, NULL, 1, &value_gen, 64, blind, NULL, blind, 32, NULL) == 1);
     CHECK(ecount == 13);
+
+    /* Malformed A/S and T1/T2 points must release the verifier's scratch allocations. */
+    {
+        const size_t malformed_point_indices[2] = {0, 2};
+        size_t point_case;
+        for (point_case = 0; point_case < 2; point_case++) {
+            secp256k1_ge parsed_point;
+            const size_t point_index = malformed_point_indices[point_case];
+            const size_t point_offset = 64 + 1 + point_index * 32;
+            size_t invalid_x;
+            size_t repeat;
+
+            memcpy(malformed_proof, proof, plen);
+            for (invalid_x = 0; invalid_x < 256; invalid_x++) {
+                memset(&malformed_proof[point_offset], 0, 32);
+                malformed_proof[point_offset + 31] = (unsigned char)invalid_x;
+                if (!secp256k1_bulletproof_deserialize_point(&parsed_point, &malformed_proof[64], point_index, 4)) {
+                    break;
+                }
+            }
+            CHECK(invalid_x < 256);
+
+            for (repeat = 0; repeat < 8; repeat++) {
+                CHECK(scratch->alloc_size == 0);
+                CHECK(secp256k1_bulletproof_rangeproof_verify(both, scratch, gens, malformed_proof, plen, min_value, pcommit, 1, 64, &value_gen, blind, 32) == 0);
+                CHECK(scratch->alloc_size == 0);
+                CHECK(secp256k1_bulletproof_rangeproof_verify_multi(both, scratch, gens, &malformed_proof_ptr, 1, plen, &mv_ptr, pcommit_arr, 1, 64, &value_gen, blind_ptr, &blindlen) == 0);
+                CHECK(scratch->alloc_size == 0);
+            }
+        }
+    }
 
     /* rangeproof_verify */
     ecount = 0;
@@ -733,6 +766,53 @@ static void test_bulletproof_innerproduct_proof_length(void) {
     CHECK(secp256k1_bulletproof_innerproduct_proof_length(8) == 289);
 }
 
+static void test_zkp_scalar_chacha20_vectors(void) {
+    static const unsigned char seed[32] = {
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+        0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+        0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
+    };
+    static const unsigned char expected_idx0_r1[32] = {
+        0x39, 0xfd, 0x2b, 0x7d, 0xd9, 0xc5, 0x19, 0x6a,
+        0x8d, 0xbd, 0x03, 0x77, 0xb8, 0xdc, 0x4a, 0x49,
+        0x8a, 0x35, 0xd8, 0x6f, 0xbc, 0xde, 0x6a, 0xcc,
+        0xb2, 0xcc, 0x7d, 0x4c, 0xd8, 0xea, 0x24, 0x92
+    };
+    static const unsigned char expected_idx0_r2[32] = {
+        0x2b, 0x23, 0xcc, 0xe7, 0xa2, 0x60, 0x23, 0xab,
+        0x3f, 0x0e, 0xef, 0x69, 0x3a, 0xc8, 0x7f, 0x64,
+        0x25, 0x82, 0x35, 0xea, 0xb1, 0xf7, 0xa3, 0x2d,
+        0xc2, 0x27, 0x62, 0xa0, 0x48, 0x5b, 0x41, 0x0c
+    };
+    static const unsigned char expected_idx64_r1[32] = {
+        0x29, 0xe6, 0x51, 0x4f, 0x5a, 0xe1, 0x5a, 0xa4,
+        0x6b, 0x86, 0x56, 0xc5, 0x03, 0x90, 0xf5, 0x5e,
+        0xd9, 0xc6, 0xe6, 0xdd, 0x66, 0x73, 0x02, 0x68,
+        0x3e, 0x4f, 0x2e, 0xe6, 0x45, 0x56, 0xf9, 0x2f
+    };
+    static const unsigned char expected_idx64_r2[32] = {
+        0x23, 0xf3, 0xa0, 0x2f, 0x36, 0xf9, 0x47, 0xb2,
+        0xba, 0x91, 0x39, 0x9c, 0x92, 0x38, 0x50, 0x06,
+        0x3d, 0x93, 0x4c, 0xe4, 0x84, 0xb1, 0xe2, 0x41,
+        0xcf, 0x1c, 0xc5, 0x4e, 0x7d, 0x5b, 0x27, 0x6c
+    };
+    secp256k1_scalar r1, r2;
+    unsigned char out1[32], out2[32];
+
+    secp256k1_scalar_chacha20(&r1, &r2, seed, 0);
+    secp256k1_scalar_get_b32(out1, &r1);
+    secp256k1_scalar_get_b32(out2, &r2);
+    CHECK(secp256k1_memcmp_var(out1, expected_idx0_r1, 32) == 0);
+    CHECK(secp256k1_memcmp_var(out2, expected_idx0_r2, 32) == 0);
+
+    secp256k1_scalar_chacha20(&r1, &r2, seed, 0x0102030405060708ULL);
+    secp256k1_scalar_get_b32(out1, &r1);
+    secp256k1_scalar_get_b32(out2, &r2);
+    CHECK(secp256k1_memcmp_var(out1, expected_idx64_r1, 32) == 0);
+    CHECK(secp256k1_memcmp_var(out2, expected_idx64_r2, 32) == 0);
+}
+
 static void test_bulletproof_inner_product_n(size_t n) {
     secp256k1_bulletproof_generators *gens = bulletproof_test_gens_create();
     test_bulletproof_inner_product(n, gens);
@@ -793,6 +873,7 @@ static void test_multi_party_bulletproof_10(void) { test_multi_party_bulletproof
 
 static const struct tf_test_entry tests_bulletproof[] = {
     CASE1(test_bulletproof_api),
+    CASE1(test_zkp_scalar_chacha20_vectors),
     CASE1(test_bulletproof_innerproduct_proof_length),
     CASE1(test_bulletproof_inner_product_0),
     CASE1(test_bulletproof_inner_product_1),
